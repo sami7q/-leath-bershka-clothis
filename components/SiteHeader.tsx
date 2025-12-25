@@ -116,7 +116,7 @@ export function SiteHeader({ config, lang, onChangeLang }: SiteHeaderProps) {
                 style={{ borderColor: "rgba(255,255,255,0.10)" }}
               >
                 <Image
-                  src="/logo/logo1.png"
+                  src="/logo/logo2.png"
                   alt={isAr ? "ليث بيرشكا" : "Leath Bershka"}
                   fill
                   sizes="44px"

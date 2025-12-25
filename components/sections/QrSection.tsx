@@ -14,339 +14,454 @@ interface QrSectionProps {
   lang: Lang;
 }
 
-const galleryImages = [
-  { src: "/gallery/1.png", alt: "Coffee cherries" },
-  { src: "/gallery/2.png", alt: "Red poster" },
-  { src: "/gallery/3.png", alt: "Roasting" },
-  { src: "/gallery/4.png", alt: "Old photo" },
-  { src: "/gallery/5.png", alt: "Cafe shot" },
-  { src: "/gallery/6.png", alt: "Beans closeup" },
-];
+const BRAND = {
+  red: "#E31B23",
+  redDeep: "#B80F16",
+  ink: "#0B0F14",
+  paper: "#F7F7F8",
+};
 
-function Chevron({ dir }: { dir: "left" | "right" }) {
+type ProductImage = {
+  src: string;
+  name: LocalizedText;
+  description: LocalizedText;
+  price: number;
+  oldPrice?: number;
+  badge?: LocalizedText;
+};
+
+function clamp(n: number, a: number, b: number) {
+  return Math.max(a, Math.min(b, n));
+}
+
+/**
+ * Floating layer (DISPLAY ONLY)
+ * - Fixed images: /sho1.png .. /sho5.png
+ * - Mobile improved: starts lower, better spacing, safer around header
+ */
+function FloatingProducts({
+  lang,
+  isAr,
+  parallaxY,
+  opacity,
+}: {
+  lang: Lang;
+  isAr: boolean;
+  parallaxY: number;
+  opacity: number;
+}) {
+  const images: ProductImage[] = useMemo(
+    () => [
+      {
+        src: "/sho.png",
+        name: { en: "Shoe 1", ar: "حذاء 1" },
+        description: { en: "", ar: "" },
+        price: 0,
+      },
+      {
+        src: "/sho2.png",
+        name: { en: "Shoe 2", ar: "حذاء 2" },
+        description: { en: "", ar: "" },
+        price: 0,
+      },
+      {
+        src: "/sho3.png",
+        name: { en: "Shoe 3", ar: "حذاء 3" },
+        description: { en: "", ar: "" },
+        price: 0,
+      },
+      {
+        src: "/sho4.png",
+        name: { en: "Shoe 4", ar: "حذاء 4" },
+        description: { en: "", ar: "" },
+        price: 0,
+      },
+      {
+        src: "/sho5.png",
+        name: { en: "Shoe 5", ar: "حذاء 5" },
+        description: { en: "", ar: "" },
+        price: 0,
+      },
+    ],
+    []
+  );
+
   return (
-    <svg
-      viewBox="0 0 24 24"
+    <div
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+      style={{
+        transform: `translate3d(0, ${parallaxY}px, 0)`,
+        willChange: "transform, opacity",
+        opacity,
+      }}
       aria-hidden="true"
-      className={"h-5 w-5 " + (dir === "left" ? "" : "rotate-180")}
     >
-      <path
-        d="M15 18L9 12l6-6"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+      {/* Top-left */}
+      <div className="fp-top-left absolute">
+        <div className="float-a relative">
+          <div className="relative h-[104px] w-[104px] sm:h-[132px] sm:w-[132px] md:h-[170px] md:w-[170px]">
+            <Image
+              src={images[0].src}
+              alt={t(images[0].name, lang)}
+              fill
+              className="object-contain drop-shadow-[0_26px_44px_rgba(0,0,0,0.32)]"
+              sizes="(min-width: 768px) 170px, 132px"
+              unoptimized
+              priority
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Top-right */}
+      <div className="fp-top-right absolute">
+        <div className="float-b relative">
+          <div className="relative h-[100px] w-[100px] sm:h-[132px] sm:w-[132px] md:h-[180px] md:w-[180px]">
+            <Image
+              src={images[1].src}
+              alt={t(images[1].name, lang)}
+              fill
+              className="object-contain drop-shadow-[0_26px_44px_rgba(0,0,0,0.32)]"
+              sizes="(min-width: 768px) 180px, 132px"
+              unoptimized
+              priority
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom-left */}
+      <div className="fp-bottom-left absolute">
+        <div className="float-c relative">
+          <div className="relative h-[118px] w-[118px] sm:h-[148px] sm:w-[148px] md:h-[190px] md:w-[190px]">
+            <Image
+              src={images[2].src}
+              alt={t(images[2].name, lang)}
+              fill
+              className="object-contain drop-shadow-[0_30px_54px_rgba(0,0,0,0.34)]"
+              sizes="(min-width: 768px) 190px, 148px"
+              unoptimized
+              priority
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom-right */}
+      <div className="fp-bottom-right absolute hidden sm:block">
+        <div className="float-d relative">
+          <div className="relative h-[126px] w-[126px] sm:h-[156px] sm:w-[156px] md:h-[205px] md:w-[205px]">
+            <Image
+              src={images[3].src}
+              alt={t(images[3].name, lang)}
+              fill
+              className="object-contain drop-shadow-[0_32px_60px_rgba(0,0,0,0.36)]"
+              sizes="(min-width: 768px) 205px, 156px"
+              unoptimized
+              priority
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Center */}
+      <div
+        className={
+          "fp-center absolute hidden md:block " +
+          (isAr ? "left-1/2" : "right-1/2")
+        }
+        style={{ transform: isAr ? "translateX(-30%)" : "translateX(30%)" }}
+      >
+        <div className="float-e relative">
+          <div className="relative h-[230px] w-[230px]">
+            <Image
+              src={images[4].src}
+              alt={t(images[4].name, lang)}
+              fill
+              className="object-contain opacity-[0.94] drop-shadow-[0_36px_72px_rgba(0,0,0,0.40)]"
+              sizes="230px"
+              unoptimized
+              priority
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Brand glows */}
+      <div
+        className="absolute -left-32 -top-28 h-[320px] w-[320px] rounded-full blur-3xl opacity-[0.22]"
+        style={{ backgroundColor: BRAND.red }}
       />
-    </svg>
+      <div
+        className="absolute -right-28 -bottom-32 h-[380px] w-[380px] rounded-full blur-3xl opacity-[0.18]"
+        style={{ backgroundColor: BRAND.redDeep }}
+      />
+
+      {/* vignette */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.42]"
+        style={{
+          background:
+            "radial-gradient(900px 520px at 50% 38%, transparent 0%, transparent 54%, rgba(0,0,0,0.62) 100%)",
+        }}
+      />
+
+      <style jsx>{`
+        /* MOBILE (improved): start lower + center-friendly spacing */
+        .fp-top-left {
+          left: 12px;
+          top: calc(240px + env(safe-area-inset-top));
+        }
+        .fp-top-right {
+          right: 12px;
+          top: calc(262px + env(safe-area-inset-top));
+        }
+
+        .fp-bottom-left {
+          left: 14px;
+          bottom: 132px;
+        }
+
+        .fp-bottom-right {
+          right: 14px;
+          bottom: 164px;
+        }
+
+        /* sm */
+        @media (min-width: 640px) {
+          .fp-top-left {
+            left: 32px;
+            top: 170px;
+          }
+          .fp-top-right {
+            right: 40px;
+            top: 184px;
+          }
+          .fp-bottom-left {
+            left: 40px;
+            bottom: 120px;
+          }
+          .fp-bottom-right {
+            right: 40px;
+            bottom: 144px;
+          }
+        }
+
+        /* md */
+        @media (min-width: 768px) {
+          .fp-top-left {
+            left: 48px;
+            top: 72px;
+          }
+          .fp-top-right {
+            right: 56px;
+            top: 76px;
+          }
+          .fp-bottom-left {
+            left: 64px;
+            bottom: 96px;
+          }
+          .fp-bottom-right {
+            right: 64px;
+            bottom: 112px;
+          }
+          .fp-center {
+            top: 44%;
+          }
+        }
+
+        .float-a {
+          animation: floatY 8.2s ease-in-out infinite,
+            driftX 13s ease-in-out infinite;
+        }
+        .float-b {
+          animation: floatY 10.4s ease-in-out infinite,
+            driftX 16s ease-in-out infinite;
+          animation-delay: -1.1s;
+        }
+        .float-c {
+          animation: floatY 9.2s ease-in-out infinite,
+            driftX 18s ease-in-out infinite;
+          animation-delay: -2s;
+        }
+        .float-d {
+          animation: floatY 11.2s ease-in-out infinite,
+            driftX 20s ease-in-out infinite;
+          animation-delay: -0.9s;
+        }
+        .float-e {
+          animation: floatY 12.4s ease-in-out infinite,
+            driftX 22s ease-in-out infinite;
+          animation-delay: -1.6s;
+        }
+
+        @keyframes floatY {
+          0% {
+            transform: translateY(0px) rotate(-0.8deg);
+          }
+          50% {
+            transform: translateY(-18px) rotate(0.8deg);
+          }
+          100% {
+            transform: translateY(0px) rotate(-0.8deg);
+          }
+        }
+        @keyframes driftX {
+          0% {
+            margin-left: 0px;
+          }
+          50% {
+            margin-left: 14px;
+          }
+          100% {
+            margin-left: 0px;
+          }
+        }
+      `}</style>
+    </div>
   );
 }
 
 export function QrSection({ config, lang }: QrSectionProps) {
   const isAr = lang === "ar";
+  const sectionRef = useRef<HTMLElement | null>(null);
 
-  // ✅ desktop auto-loop uses duplicated items
-  const rowA = useMemo(() => [...galleryImages, ...galleryImages], []);
-  const rowB = useMemo(
-    () => [...galleryImages.slice().reverse(), ...galleryImages.slice().reverse()],
-    []
-  );
+  const [parallaxY, setParallaxY] = useState(0);
+  const [layerOpacity, setLayerOpacity] = useState(1);
 
-  const scrollerRef = useRef<HTMLDivElement | null>(null);
-
-  // lightbox
-  const [open, setOpen] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  const openLightbox = (idx: number) => {
-    setActiveIndex(idx);
-    setOpen(true);
-  };
-
-  const closeLightbox = () => setOpen(false);
-
-  const next = () =>
-    setActiveIndex((i) => (i + 1) % galleryImages.length);
-  const prev = () =>
-    setActiveIndex((i) => (i - 1 + galleryImages.length) % galleryImages.length);
-
-  // keyboard for lightbox
   useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeLightbox();
-      if (e.key === "ArrowRight") next();
-      if (e.key === "ArrowLeft") prev();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+    let raf = 0;
 
-  // ✅ helper: scroll snap for mobile buttons (optional nice)
-  const scrollByCard = (dir: "prev" | "next") => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const card = el.querySelector<HTMLElement>("[data-card]");
-    const step = (card?.offsetWidth ?? 280) + 14;
-    el.scrollBy({ left: dir === "next" ? step : -step, behavior: "smooth" });
-  };
+    const calc = () => {
+      const el = sectionRef.current;
+      if (!el) return;
+
+      const rect = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+
+      const start = vh * 0.92;
+      const end = -vh * 0.55;
+      const p = clamp((start - rect.top) / (start - end), 0, 1);
+
+      const maxUp = window.innerWidth >= 768 ? 320 : 240;
+      setParallaxY(-p * maxUp);
+
+      const fade = clamp(1 - Math.abs(p - 0.55) * 0.9, 0.35, 1);
+      setLayerOpacity(fade);
+    };
+
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(calc);
+    };
+
+    calc();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
 
   return (
     <section
+      ref={(node) => {
+        sectionRef.current = node;
+      }}
       id="qr"
-      className="relative w-full overflow-hidden bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/60 py-10 md:py-14"
+      className="relative w-full overflow-hidden"
     >
-      {/* Title */}
-      <div className="mx-auto max-w-6xl px-4">
-        <div className={isAr ? "text-right" : "text-left"}>
-          <h2 className="mb-2 text-2xl font-extrabold text-slate-900 md:text-3xl">
-            {t(config.qrSection.title, lang)}
-          </h2>
-          <p className="mb-6 text-sm text-slate-600 md:text-base">
-            {t(config.qrSection.text, lang)}
-          </p>
-        </div>
-      </div>
+      <div className="relative w-full pt-[76px] md:pt-0">
+        {/* MOBILE */}
+        <div className="relative md:hidden h-[calc(100svh-76px)] min-h-[580px] w-full">
+          {/* ✅ Background => bg2 */}
+          <div className="absolute inset-0">
+            <Image
+              src="/bg2.svg"
+              alt="Background"
+              fill
+              priority
+              className="object-cover object-[50%_35%]"
+            />
+          </div>
 
-      {/* ✅ MOBILE: Snap + Drag carousel (new style) */}
-      <div className="md:hidden">
-        <div className="relative mx-auto max-w-6xl px-4">
-          {/* edge fades */}
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-slate-50 to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-slate-50 to-transparent" />
-
-          {/* scroll row */}
+          {/* ✅ Overlay */}
           <div
-            ref={scrollerRef}
-            className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 pt-1 [scrollbar-width:none] [-ms-overflow-style:none]"
-            dir="ltr"
-          >
-            {galleryImages.map((img, idx) => (
-              <button
-                key={img.src}
-                type="button"
-                onClick={() => openLightbox(idx)}
-                className="relative shrink-0 snap-center"
-                aria-label="Open image"
-              >
-                <div
-                  data-card
-                  className="relative h-[260px] w-[82vw] max-w-[360px] overflow-hidden rounded-[28px] border border-white/70 bg-slate-200 shadow-xl ring-1 ring-slate-100"
-                >
-                  <Image
-                    src={img.src}
-                    alt={img.alt}
-                    fill
-                    sizes="82vw"
-                    // ✅ faster: first 2 are priority, rest lazy
-                    priority={idx < 2}
-                    loading={idx < 2 ? "eager" : "lazy"}
-                    quality={75}
-                    className="object-cover transition-transform duration-500 active:scale-[0.99]"
-                    unoptimized
-                  />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-black/18 via-black/6 to-transparent" />
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(to bottom, rgba(11,15,20,0.08), rgba(11,15,20,0.52), rgba(11,15,20,0.90)), radial-gradient(900px 520px at 18% 18%, rgba(227,27,35,0.16), transparent 60%)",
+            }}
+          />
 
-                  {/* tiny hint */}
-                  <div className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-white/10 px-3 py-2 text-[11px] font-extrabold text-white backdrop-blur-md">
-                    {lang === "ar" ? "اضغط للتكبير" : "Tap to zoom"}
-                  </div>
-                </div>
-              </button>
-            ))}
+          {/* Floating shoes */}
+          <FloatingProducts
+            lang={lang}
+            isAr={isAr}
+            parallaxY={parallaxY}
+            opacity={layerOpacity}
+          />
+
+          {/* CLEAN text (small) */}
+          <div className="absolute inset-x-0 bottom-0 px-4 pb-[max(16px,env(safe-area-inset-bottom))]">
+            <div className={"mx-auto max-w-[520px] " + (isAr ? "text-right" : "text-left")}>
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.28em] text-white/55">
+                {lang === "en" ? "GALLERY" : "الصور"}
+              </p>
+              <h2 className="mt-1 text-[22px] font-extrabold leading-tight text-white">
+                {t(config.qrSection.title, lang)}
+              </h2>
+              <p className="mt-1.5 text-[13px] text-white/70 line-clamp-2">
+                {t(config.qrSection.text, lang)}
+              </p>
+              <p className="mt-2 text-[11px] font-bold text-white/55">
+                {t(config.qrSection.note, lang)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* DESKTOP */}
+        <div className="relative hidden md:block h-[70vh] lg:h-[88vh] min-h-[680px] w-full">
+          <div className="absolute inset-0">
+            <Image src="/bg2.svg" alt="Background" fill priority className="object-cover" />
           </div>
 
-          {/* tiny controls */}
-          <div className="mt-3 flex items-center justify-between">
-            <p className={"text-[11px] text-slate-500 " + (isAr ? "text-right" : "text-left")}>
-              {t(config.qrSection.note, lang)}
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(to bottom, rgba(11,15,20,0.18), rgba(11,15,20,0.46)), radial-gradient(1100px 600px at 18% 20%, rgba(227,27,35,0.14), transparent 62%)",
+            }}
+          />
+
+          <FloatingProducts
+            lang={lang}
+            isAr={isAr}
+            parallaxY={parallaxY}
+            opacity={layerOpacity}
+          />
+
+          <div className={"absolute left-7 top-7 " + (isAr ? "text-right" : "text-left")}>
+            <p className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.28em] text-white/60">
+              {lang === "en" ? "GALLERY" : "الصور"}
             </p>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => scrollByCard("prev")}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-800 shadow-sm active:scale-[0.98]"
-                aria-label="Previous"
-              >
-                <Chevron dir="left" />
-              </button>
-              <button
-                type="button"
-                onClick={() => scrollByCard("next")}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-800 shadow-sm active:scale-[0.98]"
-                aria-label="Next"
-              >
-                <Chevron dir="right" />
-              </button>
-            </div>
+            <h2 className="text-[24px] font-extrabold text-white">
+              {t(config.qrSection.title, lang)}
+            </h2>
+            <p className="mt-2 max-w-[560px] text-[13px] text-white/70 line-clamp-2">
+              {t(config.qrSection.text, lang)}
+            </p>
           </div>
-        </div>
-      </div>
 
-      {/* ✅ DESKTOP: premium auto-moving gallery (your idea, upgraded) */}
-      <div className="relative hidden md:block">
-        {/* soft fade edges */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-slate-50 to-transparent" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-slate-50 to-transparent" />
-
-        {/* Row 1 */}
-        <div className="group overflow-hidden py-2" dir="ltr">
-          <div className="marquee-ltr flex w-max gap-4 px-6 will-change-transform motion-reduce:animate-none">
-            {rowA.map((img, idx) => (
-              <button
-                key={`a-${idx}-${img.src}`}
-                type="button"
-                onClick={() => openLightbox(idx % galleryImages.length)}
-                className="relative"
-                aria-label="Open image"
-              >
-                <div className="relative h-72 w-[380px] shrink-0 overflow-hidden rounded-[32px] border border-white/70 bg-slate-200 shadow-xl ring-1 ring-slate-100">
-                  <Image
-                    src={img.src}
-                    alt={img.alt}
-                    fill
-                    sizes="380px"
-                    loading="lazy"
-                    quality={75}
-                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                    unoptimized
-                  />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-black/20 via-black/6 to-transparent" />
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Row 2 */}
-        <div className="group overflow-hidden py-2" dir="ltr">
-          <div className="marquee-rtl-slow flex w-max gap-4 px-6 will-change-transform motion-reduce:animate-none">
-            {rowB.map((img, idx) => (
-              <button
-                key={`b-${idx}-${img.src}`}
-                type="button"
-                onClick={() => openLightbox((galleryImages.length - 1 - (idx % galleryImages.length)))}
-                className="relative"
-                aria-label="Open image"
-              >
-                <div className="relative h-64 w-[340px] shrink-0 overflow-hidden rounded-[32px] border border-white/70 bg-slate-200 shadow-lg ring-1 ring-slate-100">
-                  <Image
-                    src={img.src}
-                    alt={img.alt}
-                    fill
-                    sizes="340px"
-                    loading="lazy"
-                    quality={75}
-                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                    unoptimized
-                  />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-black/18 via-black/6 to-transparent" />
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* note */}
-        <div className="mx-auto mt-4 max-w-6xl px-6">
-          <p className={"text-xs text-slate-500 " + (isAr ? "text-right" : "text-left")}>
+          <div className="absolute bottom-7 left-7 text-[11px] font-bold text-white/55">
             {t(config.qrSection.note, lang)}
-          </p>
-        </div>
-      </div>
-
-      {/* ✅ Lightbox */}
-      {open && (
-        <div
-          className="fixed inset-0 z-[80] bg-black/75 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          onClick={closeLightbox}
-        >
-          <div className="absolute inset-0 flex items-center justify-center p-4">
-            <div
-              className="relative w-full max-w-3xl overflow-hidden rounded-3xl bg-black shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="relative aspect-[16/10] w-full">
-                <Image
-                  src={galleryImages[activeIndex].src}
-                  alt={galleryImages[activeIndex].alt}
-                  fill
-                  sizes="(min-width: 1024px) 900px, 92vw"
-                  quality={85}
-                  className="object-contain"
-                  unoptimized
-                />
-              </div>
-
-              {/* controls */}
-              <div className="flex items-center justify-between gap-2 border-t border-white/10 bg-black/60 px-3 py-3 text-white">
-                <button
-                  type="button"
-                  onClick={prev}
-                  className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-extrabold hover:bg-white/15 active:scale-[0.98]"
-                >
-                  <Chevron dir="left" />
-                  {lang === "ar" ? "السابق" : "Prev"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={closeLightbox}
-                  className="rounded-full bg-white/10 px-4 py-2 text-sm font-extrabold hover:bg-white/15 active:scale-[0.98]"
-                >
-                  {lang === "ar" ? "إغلاق" : "Close"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={next}
-                  className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-extrabold hover:bg-white/15 active:scale-[0.98]"
-                >
-                  {lang === "ar" ? "التالي" : "Next"}
-                  <Chevron dir="right" />
-                </button>
-              </div>
-            </div>
           </div>
         </div>
-      )}
-
-      {/* ✅ keyframes for desktop marquee */}
-      <style jsx global>{`
-        .marquee-ltr {
-          animation: marquee-ltr 22s linear infinite;
-        }
-        .marquee-rtl-slow {
-          animation: marquee-rtl 30s linear infinite;
-        }
-        .group:hover .marquee-ltr,
-        .group:hover .marquee-rtl-slow {
-          animation-play-state: paused;
-        }
-        @keyframes marquee-ltr {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-        @keyframes marquee-rtl {
-          0% {
-            transform: translateX(-50%);
-          }
-          100% {
-            transform: translateX(0);
-          }
-        }
-        /* hide scrollbar */
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
+      </div>
     </section>
   );
 }

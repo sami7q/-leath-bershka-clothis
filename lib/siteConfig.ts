@@ -7,26 +7,35 @@ export type LocalizedText = {
   ar: string;
 };
 
-export type MenuItem = {
+/**
+ * ✅ Products (replaces cafe menu items)
+ * - priceFull: required
+ * - image: product image path in /public (recommended)
+ * - badge: optional (New / Sale / Limited)
+ * - oldPrice: optional (for discount UI)
+ */
+export type ProductItem = {
   id: string;
   name: LocalizedText;
   description: LocalizedText;
-  priceHalf?: number;
   priceFull: number;
   image?: string;
+
+  // optional (safe)
+  badge?: LocalizedText;
+  oldPrice?: number;
 };
 
-export type MenuCategoryId =
-  | "main"
-  | "desserts"
-  | "drinks"
-  | "breakfast"
-  | "shisha";
+/**
+ * ✅ Keep SAME category IDs to not break existing UI logic
+ * (we just change labels + items to clothing)
+ */
+export type MenuCategoryId = "main" | "desserts" | "drinks" | "breakfast" | "shisha";
 
-export type MenuCategory = {
+export type ProductCategory = {
   id: MenuCategoryId;
   label: LocalizedText;
-  items: MenuItem[];
+  items: ProductItem[];
 };
 
 export type OpeningRow = {
@@ -48,6 +57,7 @@ export type PopularItem = {
   name: LocalizedText;
   category: LocalizedText;
   price: number;
+  image?: string;
 };
 
 export interface SiteConfig {
@@ -71,10 +81,11 @@ export interface SiteConfig {
     note: LocalizedText;
   };
 
+  // ✅ still called menuSection in code, but it's "Products" now
   menuSection: {
     label: LocalizedText;
     title: LocalizedText;
-    categories: MenuCategory[];
+    categories: ProductCategory[];
   };
 
   offersSection: {
@@ -99,304 +110,209 @@ export interface SiteConfig {
     newsletterText: LocalizedText;
     newsletterPlaceholder: LocalizedText;
     newsletterButton: LocalizedText;
+    newsletterButton2?: LocalizedText;
     socialLabel: LocalizedText;
     currencySymbol: string;
   };
 }
 
-// ✅ Brand Palette (KAVUN - Teal)
+/**
+ * ✅ Leath Bershka Brand (Red + Black)
+ */
 const BRAND = {
-  primary: "#1A8597", // Teal
-  deep: "#0F5E6B",
-  soft: "#2A9CB0",
-  light: "#7CCAD6",
-  paper: "#F7FAFB",
-  text: "#0F172A",
-  muted: "#6B7280",
-  border: "#E5EEF1",
+  red: "#E31B23",
+  redDeep: "#B80F16",
+  ink: "#0B0F14",
+  paper: "#F7F7F8",
+  muted: "#9CA3AF",
 } as const;
 
 export const defaultSiteConfig: SiteConfig = {
   // ================= BRAND =================
-  brandName: { en: "KAVUN", ar: "KAVUN" },
+  brandName: { en: "LEATH BERSHKA", ar: "ليث بيرشكا" },
 
-  // ✅ Primary color (TEAL) — used across UI
-  primaryColor: BRAND.primary,
+  // ✅ Primary color (RED)
+  primaryColor: BRAND.red,
 
   // ================= HERO =================
   hero: {
-    badge: { en: "Cafe culture • Modern twist", ar: "ثقافة قهوة • لمسة عصرية" },
-    titleLine1: { en: "KAVUN", ar: "KAVUN" },
-    titleLine2: { en: "MENU", ar: "MENU" },
+    badge: { en: "Streetwear • Premium drops", ar: "ستريت وير • تشكيلة مميزة" },
+    titleLine1: { en: "LEATH", ar: "ليث" },
+    titleLine2: { en: "BERSHKA", ar: "بيرشكا" },
     description: {
-      en: "Specialty coffee, signature lattes, and refreshing drinks — crafted with a clean modern style.",
-      ar: "قهوة مختصة، لاتيهات مميزة، ومشروبات منعشة — بأسلوب عصري ونظيف.",
+      en: "Modern streetwear essentials — clean fits, premium fabrics, and limited drops.",
+      ar: "أساسيات ستريت وير عصرية — قصّات نظيفة، خامات ممتازة، وقطع محدودة.",
     },
-    cta: { en: "View Menu", ar: "عرض المنيو" },
-    discountBadge: { en: "", ar: "" },
+    cta: { en: "View Collection", ar: "عرض المنتجات" },
+    discountBadge: { en: "New Drop", ar: "وصل حديثاً" },
   },
 
-  // ================= GALLERY (QR Section) =================
+  // ================= GALLERY (optional) =================
+  // إذا ما تريد قسم Gallery خلي النصوص فاضية أو احذف السكشن من الصفحة
   qrSection: {
     title: { en: "Gallery", ar: "الصور" },
     text: {
-      en: "A quick look at our space and signature drinks.",
-      ar: "نظرة سريعة على أجوائنا ومشروباتنا المميزة.",
+      en: "A quick look at our latest fits & drops.",
+      ar: "نظرة سريعة على أحدث الإطلالات والقطع.",
     },
     note: { en: "", ar: "" },
   },
 
-  // ================= MENU =================
+  // ================= PRODUCTS (was MENU) =================
   menuSection: {
-    label: { en: "Menu", ar: "المنيو" },
-    title: { en: "Coffee & Drinks", ar: "القهوة والمشروبات" },
+    label: { en: "Products", ar: "المنتجات" },
+    title: { en: "Shop the Collection", ar: "تسوق التشكيلة" },
 
     // ✅ KEEP SAME IDs to avoid breaking your UI
     categories: [
       {
-        // main -> Hot Drinks
         id: "main",
-        label: { en: "Hot Drinks", ar: "مشروبات ساخنة" },
+        label: { en: "T-Shirts", ar: "تيشيرتات" },
         items: [
           {
-            id: "kv-espresso",
-            name: { en: "Espresso", ar: "إسبريسو" },
-            description: { en: "Single / Double.", ar: "سينغل / دبل." },
-            priceHalf: 55,
-            priceFull: 70,
-          },
-          {
-            id: "kv-americano",
-            name: { en: "Americano", ar: "أمريكانو" },
+            id: "lb-tee-oversize-black",
+            name: { en: "Oversized Tee — Black", ar: "تيشيرت أوفرسايز — أسود" },
             description: {
-              en: "Classic black coffee.",
-              ar: "قهوة سوداء كلاسيكية.",
+              en: "Heavy cotton, relaxed fit, premium feel.",
+              ar: "قطن ثقيل، قصّة مريحة، خامة فخمة.",
             },
-            priceFull: 65,
+            priceFull: 25000,
+            oldPrice: 30000,
+            badge: { en: "Sale", ar: "تخفيض" },
+            image: "/products/tee1.jpg",
           },
           {
-            id: "kv-macchiato",
-            name: { en: "Macchiato", ar: "مكياتو" },
+            id: "lb-tee-oversize-white",
+            name: { en: "Oversized Tee — White", ar: "تيشيرت أوفرسايز — أبيض" },
             description: {
-              en: "Espresso with a touch of milk.",
-              ar: "إسبريسو مع لمسة حليب.",
+              en: "Clean minimal look, breathable fabric.",
+              ar: "ستايل مينيمال نظيف، خامة مريحة.",
             },
-            priceFull: 60,
+            priceFull: 24000,
+            badge: { en: "New", ar: "جديد" },
+            image: "/products/tee2.jpg",
           },
           {
-            id: "kv-cortado",
-            name: { en: "Cortado", ar: "كورتادو" },
+            id: "lb-tee-graphic-red",
+            name: { en: "Graphic Tee — Red Print", ar: "تيشيرت جرافيك — طباعة حمراء" },
             description: {
-              en: "Balanced espresso and milk.",
-              ar: "توازن إسبريسو وحليب.",
+              en: "Statement graphic with soft-touch print.",
+              ar: "جرافيك بارز بطباعة ناعمة.",
             },
-            priceFull: 65,
-          },
-          {
-            id: "kv-cappuccino",
-            name: { en: "Cappuccino", ar: "كابتشينو" },
-            description: { en: "Foamy and smooth.", ar: "رغوي وناعم." },
-            priceFull: 80,
-          },
-          {
-            id: "kv-flat-white",
-            name: { en: "Flat white", ar: "فلات وايت" },
-            description: { en: "Silky milk texture.", ar: "حليب ناعم القوام." },
-            priceFull: 75,
-          },
-          {
-            id: "kv-latte",
-            name: { en: "Latte", ar: "لاتيه" },
-            description: { en: "Creamy and comforting.", ar: "كريمي ومريح." },
-            priceFull: 85,
-          },
-          {
-            id: "kv-salted-caramel-latte",
-            name: { en: "Salted caramel latte", ar: "لاتيه كراميل مملّح" },
-            description: { en: "Sweet-salty caramel.", ar: "كراميل حلو مالح." },
-            priceFull: 95,
-          },
-          {
-            id: "kv-dark-mocha",
-            name: { en: "Dark mocha", ar: "موكا غامقة" },
-            description: { en: "Rich cocoa mocha.", ar: "موكا غنية بالكاكاو." },
-            priceFull: 95,
-          },
-          {
-            id: "kv-white-mocha",
-            name: { en: "White mocha", ar: "موكا بيضاء" },
-            description: {
-              en: "Smooth white chocolate.",
-              ar: "شوكولاتة بيضاء ناعمة.",
-            },
-            priceFull: 95,
-          },
-          {
-            id: "kv-spanish-latte-hot",
-            name: { en: "Spanish Latte", ar: "سبانش لاتيه" },
-            description: { en: "Sweet & creamy.", ar: "حلو وكريمي." },
-            priceFull: 95,
-          },
-          {
-            id: "kv-honey-latte",
-            name: { en: "Honey Latte", ar: "لاتيه عسل" },
-            description: { en: "Natural honey note.", ar: "نكهة عسل طبيعية." },
-            priceFull: 95,
-          },
-          {
-            id: "kv-pistachio-latte-hot",
-            name: { en: "Pistachio Latte", ar: "لاتيه فستق" },
-            description: { en: "Signature pistachio.", ar: "فستق مميز." },
-            priceFull: 140,
-          },
-          {
-            id: "kv-kardamom",
-            name: { en: "Kardamom", ar: "هيل" },
-            description: { en: "Warm cardamom taste.", ar: "نكهة هيل دافئة." },
-            priceFull: 95,
-          },
-          {
-            id: "kv-hot-chocolate",
-            name: { en: "Hot chocolate", ar: "شوكولاتة ساخنة" },
-            description: {
-              en: "Classic hot chocolate.",
-              ar: "شوكولاتة ساخنة كلاسيكية.",
-            },
-            priceFull: 90,
-          },
-          {
-            id: "kv-matcha-hot",
-            name: { en: "Matcha", ar: "ماتشا" },
-            description: { en: "Premium matcha latte.", ar: "لاتيه ماتشا مميز." },
-            priceFull: 120,
+            priceFull: 27000,
+            image: "/products/tee3.jpg",
           },
         ],
       },
 
       {
-        // breakfast -> Cold Drinks
         id: "breakfast",
-        label: { en: "Cold Drinks", ar: "مشروبات باردة" },
+        label: { en: "Hoodies", ar: "هوديات" },
         items: [
           {
-            id: "kv-iced-americano",
-            name: { en: "Iced Americano", ar: "أمريكانو مثلّج" },
-            description: { en: "Cold and bold.", ar: "بارد وقوي." },
-            priceFull: 70,
-          },
-          {
-            id: "kv-iced-latte",
-            name: { en: "Iced Latte", ar: "لاتيه مثلّج" },
-            description: { en: "Iced creamy latte.", ar: "لاتيه بارد كريمي." },
-            priceFull: 90,
-          },
-          {
-            id: "kv-iced-spanish-latte",
-            name: { en: "Iced spanish latte", ar: "سبانش لاتيه مثلّج" },
-            description: { en: "Sweet iced latte.", ar: "لاتيه بارد حلو." },
-            priceFull: 95,
-          },
-          {
-            id: "kv-iced-pistachio-latte",
-            name: { en: "Iced pistachio latte", ar: "لاتيه فستق مثلّج" },
-            description: { en: "Pistachio over ice.", ar: "فستق على الثلج." },
-            priceFull: 140,
-          },
-          {
-            id: "kv-iced-shaken-mocha",
-            name: {
-              en: "Iced shaken white/dark mocha",
-              ar: "موكا شيكن أبيض/غامق مثلّج",
-            },
-            description: { en: "Shaken mocha style.", ar: "موكا بطريقة شيكن." },
-            priceFull: 95,
-          },
-          {
-            id: "kv-hibiscus",
-            name: { en: "Hibiscus", ar: "كركديه" },
-            description: { en: "Refreshing hibiscus.", ar: "كركديه منعش." },
-            priceFull: 90,
-          },
-          {
-            id: "kv-iced-matcha",
-            name: { en: "Iced matcha", ar: "ماتشا مثلّجة" },
-            description: { en: "Matcha over ice.", ar: "ماتشا على الثلج." },
-            priceFull: 120,
-          },
-        ],
-      },
-
-      {
-        // desserts -> Fresh / Juices
-        id: "desserts",
-        label: { en: "Fresh & Juices", ar: "عصائر ومنعشات" },
-        items: [
-          {
-            id: "kv-orange-juice",
-            name: { en: "Orange juice", ar: "عصير برتقال" },
-            description: { en: "Fresh orange juice.", ar: "عصير برتقال طازج." },
-            priceFull: 60,
-          },
-          {
-            id: "kv-mango-juice",
-            name: { en: "Mango juice", ar: "عصير مانجو" },
-            description: { en: "Smooth mango juice.", ar: "عصير مانجو ناعم." },
-            priceFull: 75,
-          },
-          {
-            id: "kv-mojito",
-            name: { en: "Mojito", ar: "موهيتو" },
-            description: { en: "Minty refresher.", ar: "منعش بالنعناع." },
-            priceFull: 100,
-          },
-        ],
-      },
-
-      {
-        // drinks -> Water / Brew
-        id: "drinks",
-        label: { en: "Brew & Water", ar: "مشروبات ومياه" },
-        items: [
-          {
-            id: "kv-cold-brew",
-            name: { en: "Cold brew", ar: "كولد برو" },
+            id: "lb-hoodie-black",
+            name: { en: "Hoodie — Black", ar: "هودي — أسود" },
             description: {
-              en: "Slow brewed coffee.",
-              ar: "قهوة مخمرة على البارد.",
+              en: "Warm fleece, structured hood, daily essential.",
+              ar: "فليس دافي، هود ثابت، قطعة يومية.",
             },
-            priceFull: 100,
+            priceFull: 55000,
+            badge: { en: "Best Seller", ar: "الأكثر مبيعاً" },
+            image: "/products/hoodie1.jpg",
           },
           {
-            id: "kv-water",
-            name: { en: "Water", ar: "ماء" },
-            description: { en: "Still water.", ar: "ماء." },
-            priceFull: 15,
-          },
-          {
-            id: "kv-sparkling-water",
-            name: { en: "Sparkling water", ar: "ماء غازي" },
-            description: { en: "Sparkling water.", ar: "ماء غازي." },
-            priceFull: 45,
+            id: "lb-hoodie-ash",
+            name: { en: "Hoodie — Ash Grey", ar: "هودي — رمادي" },
+            description: {
+              en: "Soft fleece with clean logo detail.",
+              ar: "فليس ناعم مع تفصيلة لوغو.",
+            },
+            priceFull: 52000,
+            image: "/products/hoodie2.jpg",
           },
         ],
       },
 
       {
-        // shisha -> Signatures (keep id to not break UI)
-        id: "shisha",
-        label: { en: "Signature", ar: "مميز" },
+        id: "desserts",
+        label: { en: "Jackets", ar: "جاكيتات" },
         items: [
           {
-            id: "kv-spanish-latte-cold",
-            name: { en: "Spanish latte", ar: "سبانش لاتيه" },
-            description: { en: "Our signature style.", ar: "بطريقتنا المميزة." },
-            priceFull: 120,
+            id: "lb-jacket-bomber-black",
+            name: { en: "Bomber Jacket — Black", ar: "جاكيت بومبر — أسود" },
+            description: {
+              en: "Lightweight bomber, premium zipper, street-ready.",
+              ar: "بومبر خفيف، سحاب ممتاز، ستريت جاهز.",
+            },
+            priceFull: 85000,
+            badge: { en: "Limited", ar: "محدود" },
+            image: "/products/jacket1.jpg",
           },
           {
-            id: "kv-matcha-signature",
-            name: { en: "Matcha", ar: "ماتشا" },
-            description: { en: "Premium matcha.", ar: "ماتشا مميزة." },
-            priceFull: 120,
+            id: "lb-jacket-denim",
+            name: { en: "Denim Jacket — Blue", ar: "جاكيت جينز — أزرق" },
+            description: {
+              en: "Classic denim with modern fit.",
+              ar: "جينز كلاسيكي بقصّة عصرية.",
+            },
+            priceFull: 78000,
+            image: "/products/jacket2.jpg",
+          },
+        ],
+      },
+
+      {
+        id: "drinks",
+        label: { en: "Pants", ar: "بناطيل" },
+        items: [
+          {
+            id: "lb-pants-cargo-black",
+            name: { en: "Cargo Pants — Black", ar: "بنطلون كارجو — أسود" },
+            description: {
+              en: "Utility pockets, tapered fit, durable fabric.",
+              ar: "جيوب عملية، قصّة مميزة، خامة قوية.",
+            },
+            priceFull: 60000,
+            badge: { en: "New", ar: "جديد" },
+            image: "/products/pants1.jpg",
+          },
+          {
+            id: "lb-pants-jeans-black",
+            name: { en: "Jeans — Washed Black", ar: "جينز — أسود مغسول" },
+            description: {
+              en: "Straight fit, washed finish, everyday wear.",
+              ar: "قصّة مستقيمة، لون مغسول، مناسب يومياً.",
+            },
+            priceFull: 65000,
+            image: "/products/pants2.jpg",
+          },
+        ],
+      },
+
+      {
+        id: "shisha",
+        label: { en: "Shoes", ar: "أحذية" },
+        items: [
+          {
+            id: "lb-shoes-sneakers-white",
+            name: { en: "Sneakers — White", ar: "سنيكرز — أبيض" },
+            description: {
+              en: "Clean silhouette with comfy sole.",
+              ar: "تصميم نظيف مع نعل مريح.",
+            },
+            priceFull: 90000,
+            badge: { en: "Best Seller", ar: "الأكثر مبيعاً" },
+            image: "/products/shoes1.jpg",
+          },
+          {
+            id: "lb-shoes-sneakers-black",
+            name: { en: "Sneakers — Black", ar: "سنيكرز — أسود" },
+            description: {
+              en: "All-black street look, durable upper.",
+              ar: "ستايل ستريت أسود كامل، خامة قوية.",
+            },
+            priceFull: 92000,
+            image: "/products/shoes2.jpg",
           },
         ],
       },
@@ -409,47 +325,47 @@ export const defaultSiteConfig: SiteConfig = {
     offers: [
       {
         id: "offer-1",
-        title: { en: "Coffee Moment", ar: "لحظة قهوة" },
-        subtitle: { en: "Choose your favorite latte", ar: "اختَر اللاتيه المفضل" },
-        badge: { en: "Signature", ar: "مميز" },
-        gradientFrom: BRAND.primary,
-        gradientTo: BRAND.soft,
+        title: { en: "Winter Drop", ar: "تشكيلة الشتاء" },
+        subtitle: { en: "Hoodies & jackets available now", ar: "هوديات وجاكيتات متوفرة الآن" },
+        badge: { en: "Limited", ar: "محدود" },
+        gradientFrom: BRAND.ink,
+        gradientTo: BRAND.redDeep,
       },
       {
         id: "offer-2",
-        title: { en: "Refresh & Chill", ar: "انتعاش وبرودة" },
-        subtitle: {
-          en: "Cold drinks and refreshers",
-          ar: "مشروبات باردة ومنعشات",
-        },
-        badge: { en: "Cold", ar: "بارد" },
-        gradientFrom: BRAND.deep,
-        gradientTo: BRAND.primary,
+        title: { en: "Best Sellers", ar: "الأكثر مبيعاً" },
+        subtitle: { en: "Top picks of the week", ar: "أفضل اختيارات الأسبوع" },
+        badge: { en: "Hot", ar: "رائج" },
+        gradientFrom: BRAND.red,
+        gradientTo: BRAND.ink,
       },
     ],
   },
 
   // ================= POPULAR =================
   popularSection: {
-    title: { en: "Popular", ar: "الأكثر طلبًا" },
+    title: { en: "Best Sellers", ar: "الأكثر مبيعاً" },
     items: [
       {
         id: "pop-1",
-        name: { en: "Spanish Latte", ar: "سبانش لاتيه" },
-        category: { en: "Hot Drinks", ar: "مشروبات ساخنة" },
-        price: 95,
+        name: { en: "Hoodie — Black", ar: "هودي — أسود" },
+        category: { en: "Hoodies", ar: "هوديات" },
+        price: 55000,
+        image: "/products/hoodie1.jpg",
       },
       {
         id: "pop-2",
-        name: { en: "Pistachio Latte", ar: "لاتيه فستق" },
-        category: { en: "Hot Drinks", ar: "مشروبات ساخنة" },
-        price: 140,
+        name: { en: "Cargo Pants — Black", ar: "بنطلون كارجو — أسود" },
+        category: { en: "Pants", ar: "بناطيل" },
+        price: 60000,
+        image: "/products/pants1.jpg",
       },
       {
         id: "pop-3",
-        name: { en: "Cold Brew", ar: "كولد برو" },
-        category: { en: "Brew & Water", ar: "مشروبات ومياه" },
-        price: 100,
+        name: { en: "Sneakers — White", ar: "سنيكرز — أبيض" },
+        category: { en: "Shoes", ar: "أحذية" },
+        price: 90000,
+        image: "/products/shoes1.jpg",
       },
     ],
   },
@@ -457,15 +373,15 @@ export const defaultSiteConfig: SiteConfig = {
   // ================= FOOTER =================
   footer: {
     about: {
-      en: "KAVUN — cafe culture with a modern twist. Specialty coffee and refreshing drinks in a clean minimalist vibe.",
-      ar: "KAVUN — ثقافة قهوة بلمسة عصرية. قهوة مختصة ومشروبات منعشة بأجواء نظيفة ومينيمال.",
+      en: "Leath Bershka — premium streetwear essentials with clean fits and limited drops.",
+      ar: "ليث بيرشكا — ستريت وير بخامات ممتازة، قصّات نظيفة، وقطع محدودة.",
     },
 
     openingTitle: { en: "Working Hours", ar: "أوقات العمل" },
     openings: [
       {
         label: { en: "Daily", ar: "يوميًا" },
-        time: { en: "08:00 AM – 12:00 AM", ar: "08:00 صباحًا – 12:00 ليلًا" },
+        time: { en: "10:00 AM – 10:00 PM", ar: "10:00 صباحًا – 10:00 مساءً" },
       },
     ],
 
@@ -474,10 +390,11 @@ export const defaultSiteConfig: SiteConfig = {
 
     contactTitle: { en: "Contact", ar: "التواصل" },
 
-    // ✅ Updated contacts for Kavun (Instagram + Maps only)
+    // ✅ ضع روابطك الحقيقية هنا
     contacts: [
-      "https://www.instagram.com/kavun.eg?igsh=MXM1cDhhbGN2anl5Mg%3D%3D",
-      "https://maps.app.goo.gl/ooqTjMoAZuaX9PXv6",
+      "https://www.instagram.com/",
+      "https://wa.me/",
+      "https://maps.app.goo.gl/",
     ],
 
     newsletterTitle: { en: "", ar: "" },
@@ -487,6 +404,7 @@ export const defaultSiteConfig: SiteConfig = {
 
     socialLabel: { en: "", ar: "" },
 
-    currencySymbol: "",
+    // ✅ IQD example (غيرها حسب ما تريد)
+    currencySymbol: "IQD ",
   },
 };

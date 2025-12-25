@@ -1,7 +1,7 @@
 // components/sections/MenuSection.tsx
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import { SiteConfig, Lang, LocalizedText } from "../../lib/siteConfig";
 
@@ -14,137 +14,151 @@ interface MenuSectionProps {
   lang: Lang;
 }
 
+/**
+ * ✅ Leath Bershka — Products Section (Compact Grid)
+ * - Mobile: 2 columns (so 8 items => 4 rows "4 تحت 4" بشكل عملي)
+ * - Tablet: 3 columns
+ * - Desktop: 4 columns (شبكي أنيق)
+ * - Smaller cards + smaller image ratio + tighter paddings
+ */
 export function MenuSection({ config, lang }: MenuSectionProps) {
-  const [activeCategoryId, setActiveCategoryId] =
-    useState<SiteConfig["menuSection"]["categories"][number]["id"]>("main");
-
-  const activeCategory =
-    config.menuSection.categories.find((c) => c.id === activeCategoryId) ??
-    config.menuSection.categories[0];
-
-  const currency = config.footer.currencySymbol;
   const isAr = lang === "ar";
 
-  // ✅ Fried Chicken palette
-  const accent = config.primaryColor ?? "#E81B24";
-  const accentDeep = "#AD1E1F";
-  const paper = "#F8F7F8";
-  const cocoa = "#651810";
+  const BRAND = useMemo(
+    () => ({
+      red: "#E31B23",
+      redDeep: "#B80F16",
+      ink: "#0B0F14",
+      paper: "#F7F7F8",
+      muted: "rgba(247,247,248,0.70)",
+      textMuted: "rgba(247,247,248,0.62)",
+      border: "rgba(255,255,255,0.10)",
+      borderStrong: "rgba(255,255,255,0.14)",
+      card: "rgba(255,255,255,0.04)",
+      cardHover: "rgba(255,255,255,0.06)",
+    }),
+    []
+  );
+
+  const currency = config.footer.currencySymbol ?? "";
+  const categories = config.menuSection?.categories ?? [];
+
+  const [activeCategoryId, setActiveCategoryId] = useState<
+    SiteConfig["menuSection"]["categories"][number]["id"]
+  >(categories?.[0]?.id ?? "main");
+
+  const activeCategory =
+    categories.find((c) => c.id === activeCategoryId) ?? categories[0];
+
+  const items = useMemo(() => {
+    const list = (activeCategory?.items ?? []) as any[];
+    return [...list].sort(
+      (a, b) => Number(Boolean(b?.image)) - Number(Boolean(a?.image))
+    );
+  }, [activeCategory]);
+
+  const handleScrollToContact = () => {
+    const el = document.getElementById("contact");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <section
       id="menu"
-      className="py-12 md:py-16"
+      className="py-10 md:py-14"
       style={{
-        backgroundImage: `linear-gradient(to bottom, ${paper}, ${paper}, rgba(237,208,164,0.35))`,
+        background:
+          "radial-gradient(1000px 520px at 18% 8%, rgba(227,27,35,0.10), transparent 62%), linear-gradient(to bottom, rgba(11,15,20,0.98), rgba(11,15,20,0.96))",
       }}
     >
       <div className="mx-auto max-w-6xl px-3 sm:px-4">
-        {/* ✅ MAKE BANNER WIDER on desktop */}
-        <div className="lg:grid lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:gap-10 lg:items-start">
-          {/* ===== LEFT: BIG MENU BANNER (WIDER) ===== */}
-          <div className="mb-10 lg:mb-0">
-            <div
-              className="relative overflow-hidden rounded-[36px] shadow-xl ring-1"
+        {/* ===================== HEADER ===================== */}
+        <div className={"mb-5 " + (isAr ? "text-right" : "text-left")}>
+          <p
+            className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.28em]"
+            style={{ color: BRAND.muted }}
+          >
+            {lang === "en" ? "PRODUCTS" : "المنتجات"}
+          </p>
+
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h2
+                className="text-[20px] font-extrabold sm:text-[24px] md:text-[28px]"
+                style={{ color: BRAND.paper }}
+              >
+                {lang === "en" ? "Leath Bershka Collection" : "تشكيلة ليث بيرشكا"}
+              </h2>
+              <p
+                className="mt-2 max-w-2xl text-[13px] leading-relaxed sm:text-[14px]"
+                style={{ color: BRAND.textMuted }}
+              >
+                {lang === "en"
+                  ? "Premium pieces, clean cuts, and modern streetwear essentials."
+                  : "قطع مميزة بخامات ممتازة، قصّات نظيفة، وستريت وير عصري."}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleScrollToContact}
+              className="inline-flex items-center justify-center rounded-full px-4 py-2 text-[13px] font-extrabold transition active:scale-[0.98]"
               style={{
-                backgroundColor: "#111",
-                boxShadow: "0 22px 55px rgba(0,0,0,0.18)",
-                borderColor: "rgba(101,24,16,0.10)",
+                background: "rgba(255,255,255,0.05)",
+                border: `1px solid ${BRAND.border}`,
+                color: BRAND.paper,
+                boxShadow: "0 14px 40px rgba(0,0,0,0.22)",
               }}
             >
-              {/* ✅ keep height similar, focus on wider column */}
-              <div className="relative h-56 sm:h-64 md:h-72 lg:h-[420px]">
-                <Image
-                  src="/cafe/menu-banner.svg"
-                  alt={t(config.menuSection.title, lang)}
-                  fill
-                  className="object-cover"
-                  // ✅ banner is now wider, so give it more pixels on desktop
-                  sizes="(min-width: 1024px) 720px, 100vw"
-                />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-black/35 via-black/10 to-black/0" />
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/35 to-transparent" />
-              </div>
-            </div>
+              {lang === "en" ? "Order via WhatsApp" : "اطلب عبر واتساب"}
+              <span
+                className={
+                  "ml-2 inline-flex h-7 w-7 items-center justify-center rounded-full " +
+                  (isAr ? "mr-2 ml-0" : "")
+                }
+                style={{
+                  background: `linear-gradient(135deg, ${BRAND.red}, ${BRAND.redDeep})`,
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M9 18L15 12L9 6"
+                    stroke="white"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+            </button>
           </div>
+        </div>
 
-          {/* ===== RIGHT: HEADER + TABS + MENU LIST ===== */}
-          <div>
-            {/* HEADER */}
-            <div className="mb-6">
-              <div className={isAr ? "text-right" : "text-left"}>
-                <p
-                  className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em]"
-                  style={{ color: accent }}
-                >
-                  {t(config.menuSection.label, lang)}
-                </p>
-
-                <h2
-                  className="text-2xl font-extrabold sm:text-3xl md:text-[32px]"
-                  style={{ color: cocoa }}
-                >
-                  {t(config.menuSection.title, lang)}
-                </h2>
-              </div>
-            </div>
-
-            {/* CATEGORY TABS */}
-            <div className="mb-7">
-              {/* MOBILE GRID */}
-              <div className="grid max-w-md grid-cols-2 gap-3 md:hidden">
-                {config.menuSection.categories.map((cat) => {
+        {/* ===================== CATEGORY FILTERS ===================== */}
+        {categories.length > 1 && (
+          <div className="mb-5">
+            {/* Mobile chips */}
+            <div className="md:hidden -mx-3 px-3 overflow-x-auto">
+              <div className="flex w-max gap-2 pb-2">
+                {categories.map((cat) => {
                   const isActive = cat.id === activeCategoryId;
-
                   return (
                     <button
                       key={cat.id}
+                      type="button"
                       onClick={() => setActiveCategoryId(cat.id)}
-                      className="w-full rounded-xl border px-4 py-2 text-sm font-extrabold transition active:scale-[0.99]"
+                      className="whitespace-nowrap rounded-full px-4 py-2 text-[13px] font-extrabold transition active:scale-[0.99]"
                       style={{
-                        borderColor: isActive ? accent : "rgba(101,24,16,0.14)",
-                        backgroundColor: isActive ? accent : "rgba(255,255,255,0.75)",
-                        color: isActive ? "white" : cocoa,
+                        background: isActive
+                          ? `linear-gradient(135deg, ${BRAND.red}, ${BRAND.redDeep})`
+                          : "rgba(255,255,255,0.05)",
+                        color: BRAND.paper,
+                        border: `1px solid ${
+                          isActive ? "rgba(227,27,35,0.34)" : BRAND.border
+                        }`,
                         boxShadow: isActive
-                          ? "0 14px 30px rgba(232,27,36,0.22)"
-                          : "0 10px 26px rgba(0,0,0,0.06)",
-                      }}
-                    >
-                      {t(cat.label, lang)}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* DESKTOP/TABLET TABS */}
-              <div className="hidden md:flex md:flex-wrap md:gap-3">
-                {config.menuSection.categories.map((cat) => {
-                  const isActive = cat.id === activeCategoryId;
-
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => setActiveCategoryId(cat.id)}
-                      className="rounded-full border px-5 py-2 text-sm font-extrabold transition hover:translate-y-[-1px] active:translate-y-0"
-                      style={{
-                        borderColor: isActive ? accent : "rgba(101,24,16,0.14)",
-                        backgroundColor: isActive ? accent : "rgba(255,255,255,0.75)",
-                        color: isActive ? "white" : cocoa,
-                        boxShadow: isActive
-                          ? "0 14px 30px rgba(232,27,36,0.22)"
-                          : "0 10px 26px rgba(0,0,0,0.06)",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.borderColor = "rgba(101,24,16,0.22)";
-                          e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.90)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.borderColor = "rgba(101,24,16,0.14)";
-                          e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.75)";
-                        }
+                          ? "0 14px 40px rgba(227,27,35,0.16)"
+                          : "0 14px 40px rgba(0,0,0,0.18)",
                       }}
                     >
                       {t(cat.label, lang)}
@@ -154,113 +168,205 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
               </div>
             </div>
 
-            {/* MENU LIST */}
-            <div className="space-y-4">
-              {activeCategory.items.map((item) => {
-                const itemImage = (item as any).image as string | undefined;
-
+            {/* Desktop */}
+            <div className="hidden md:flex md:flex-wrap md:gap-2.5">
+              {categories.map((cat) => {
+                const isActive = cat.id === activeCategoryId;
                 return (
-                  <div
-                    key={item.id}
-                    className="group rounded-2xl px-3 py-3 transition sm:px-4 sm:py-4"
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setActiveCategoryId(cat.id)}
+                    className="rounded-full px-4 py-2 text-[13px] font-extrabold transition hover:translate-y-[-1px] active:translate-y-0"
                     style={{
-                      backgroundColor: "rgba(255,255,255,0.92)",
-                      boxShadow: "0 10px 26px rgba(0,0,0,0.06)",
-                      border: "1px solid rgba(101,24,16,0.08)",
+                      background: isActive
+                        ? `linear-gradient(135deg, ${BRAND.red}, ${BRAND.redDeep})`
+                        : "rgba(255,255,255,0.05)",
+                      color: BRAND.paper,
+                      border: `1px solid ${
+                        isActive ? "rgba(227,27,35,0.34)" : BRAND.border
+                      }`,
+                      boxShadow: isActive
+                        ? "0 14px 40px rgba(227,27,35,0.14)"
+                        : "0 14px 40px rgba(0,0,0,0.16)",
                     }}
                   >
-                    <div
-                      className={
-                        "flex items-start gap-3 sm:gap-4 " +
-                        (isAr ? "flex-row-reverse" : "flex-row")
-                      }
-                    >
-                      {/* dish image */}
-                      <div
-                        className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl sm:h-20 sm:w-20"
-                        style={{
-                          backgroundColor: "rgba(101,24,16,0.08)",
-                          border: "1px solid rgba(101,24,16,0.10)",
-                        }}
-                      >
-                        {itemImage ? (
-                          <Image
-                            src={itemImage}
-                            alt={t(item.name, lang)}
-                            fill
-                            className="object-cover transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-105"
-                            sizes="80px"
-                          />
-                        ) : (
-                          <div
-                            className="flex h-full w-full items-center justify-center text-[11px]"
-                            style={{ color: "rgba(101,24,16,0.55)" }}
-                          >
-                            {lang === "en" ? "Dish" : "طبق"}
-                          </div>
-                        )}
-                        <div className="pointer-events-none absolute inset-0 bg-black/0 transition group-hover:bg-black/5" />
-                      </div>
-
-                      {/* name + desc + price */}
-                      <div className="flex-1">
-                        <div
-                          className={
-                            "flex items-baseline gap-3 " +
-                            (isAr ? "flex-row-reverse" : "flex-row")
-                          }
-                        >
-                          <p className="text-base font-extrabold sm:text-lg" style={{ color: cocoa }}>
-                            {t(item.name, lang)}
-                          </p>
-
-                          <span
-                            className="mt-2 flex-1 border-b border-dashed"
-                            style={{ borderColor: "rgba(101,24,16,0.22)" }}
-                          />
-
-                          <div
-                            className="whitespace-nowrap text-right text-sm font-extrabold sm:text-base"
-                            style={{ color: accent }}
-                          >
-                            <span>
-                              {currency}
-                              {item.priceFull.toFixed(0)}
-                            </span>
-                          </div>
-                        </div>
-
-                        <p
-                          className={
-                            "mt-1 text-xs sm:text-[13px] " +
-                            (isAr ? "text-right" : "text-left")
-                          }
-                          style={{ color: "rgba(101,24,16,0.62)" }}
-                        >
-                          {t(item.description, lang)}
-                        </p>
-
-                        <div
-                          className="mt-2 h-[2px] w-0 rounded-full transition-all duration-300 group-hover:w-24"
-                          style={{ backgroundColor: accentDeep, opacity: 0.35 }}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                    {t(cat.label, lang)}
+                  </button>
                 );
               })}
             </div>
-
-            {/* footer note */}
-            <div
-              className={"mt-8 text-[12px] " + (isAr ? "text-right" : "text-left")}
-              style={{ color: "rgba(101,24,16,0.55)" }}
-            >
-              {lang === "en"
-                ? "Prices may change based on offers."
-                : "الأسعار قد تتغير حسب العروض."}
-            </div>
           </div>
+        )}
+
+        {/* ===================== PRODUCTS GRID (SMALLER) ===================== */}
+        {/* ✅ Mobile: 2 cols (4 rows for 8 items) — practical & readable */}
+        {/* ✅ Desktop: 4 cols, XL: 5 cols for ultra-grid look */}
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {items.map((item: any) => {
+            const itemImage = item?.image as string | undefined;
+            const badge = item?.badge as LocalizedText | undefined;
+            const oldPrice = item?.oldPrice as number | undefined;
+
+            const price = Number(item?.priceFull ?? 0);
+            const hasDiscount = typeof oldPrice === "number" && oldPrice > price;
+
+            return (
+              <article
+                key={item?.id}
+                className="group relative overflow-hidden rounded-2xl border transition"
+                style={{
+                  backgroundColor: BRAND.card,
+                  borderColor: BRAND.border,
+                  boxShadow: "0 14px 40px rgba(0,0,0,0.16)",
+                }}
+              >
+                {/* subtle hover */}
+                <div
+                  className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  style={{
+                    background:
+                      "radial-gradient(380px 200px at 20% 0%, rgba(227,27,35,0.12), transparent 60%)",
+                  }}
+                />
+
+                {/* ✅ Smaller image area */}
+                <div className="relative aspect-[1/1.12] w-full overflow-hidden">
+                  {itemImage ? (
+                    <>
+                      <Image
+                        src={itemImage}
+                        alt={t(item?.name, lang)}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                        sizes="(min-width: 1280px) 220px, (min-width: 1024px) 240px, (min-width: 768px) 33vw, 50vw"
+                      />
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+                    </>
+                  ) : (
+                    <div className="flex h-full items-center justify-center bg-white/5 text-[12px] font-bold text-white/70">
+                      {lang === "en" ? "No image" : "لا توجد صورة"}
+                    </div>
+                  )}
+
+                  {/* ✅ Smaller badge */}
+                  <div className="absolute left-2 top-2">
+                    <div
+                      className="inline-flex items-center rounded-full px-2 py-0.5 text-[9.5px] font-extrabold"
+                      style={{
+                        background: "rgba(11,15,20,0.55)",
+                        border: `1px solid ${BRAND.borderStrong}`,
+                        color: BRAND.paper,
+                        backdropFilter: "blur(10px)",
+                      }}
+                    >
+                      <span
+                        className="mr-1.5 inline-flex h-1.5 w-1.5 rounded-full"
+                        style={{ backgroundColor: BRAND.red }}
+                      />
+                      {badge ? t(badge, lang) : lang === "en" ? "New" : "جديد"}
+                    </div>
+                  </div>
+
+                  {/* ✅ Smaller price pill */}
+                  <div className="absolute bottom-2 right-2">
+                    <div
+                      className="inline-flex items-baseline gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-extrabold"
+                      style={{
+                        background: `linear-gradient(135deg, ${BRAND.red}, ${BRAND.redDeep})`,
+                        color: "white",
+                        boxShadow: "0 12px 30px rgba(0,0,0,0.24)",
+                      }}
+                    >
+                      <span>
+                        {currency}
+                        {price.toFixed(0)}
+                      </span>
+                      {hasDiscount && (
+                        <span className="text-[10px] font-bold text-white/75 line-through">
+                          {currency}
+                          {Number(oldPrice).toFixed(0)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ✅ Compact content */}
+                <div
+                  className={
+                    "p-2.5 sm:p-3 " + (isAr ? "text-right" : "text-left")
+                  }
+                >
+                  <h3
+                    className="text-[12.5px] font-extrabold sm:text-[13.5px]"
+                    style={{ color: BRAND.paper }}
+                  >
+                    {t(item?.name, lang)}
+                  </h3>
+
+                  <p
+                    className="mt-1 line-clamp-2 text-[11px] leading-relaxed sm:text-[12px]"
+                    style={{ color: BRAND.textMuted }}
+                  >
+                    {t(item?.description, lang)}
+                  </p>
+
+                  {/* ✅ Tiny actions (mobile-friendly) */}
+                  <div
+                    className={
+                      "mt-2 flex items-center gap-2 " +
+                      (isAr ? "justify-end" : "")
+                    }
+                  >
+                    <a
+                      href="#contact"
+                      className="inline-flex flex-1 items-center justify-center rounded-xl px-2.5 py-2 text-[12px] font-extrabold transition active:scale-[0.99]"
+                      style={{
+                        background: "rgba(255,255,255,0.05)",
+                        border: `1px solid ${BRAND.border}`,
+                        color: BRAND.paper,
+                      }}
+                    >
+                      {lang === "en" ? "Order" : "اطلب"}
+                    </a>
+
+                    <button
+                      type="button"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-xl border transition active:scale-[0.99]"
+                      style={{
+                        borderColor: BRAND.border,
+                        background: "rgba(255,255,255,0.04)",
+                        color: BRAND.paper,
+                      }}
+                      aria-label={lang === "en" ? "Favorite" : "مفضلة"}
+                      title={lang === "en" ? "Favorite" : "مفضلة"}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M12 21s-7-4.35-9.33-8.3C.56 9.2 2.14 6 5.6 6c1.9 0 3.13 1.01 3.9 2.02C10.27 7.01 11.5 6 13.4 6c3.46 0 5.04 3.2 2.93 6.7C19 16.65 12 21 12 21Z"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+
+        {/* Footer note */}
+        <div
+          className={"mt-7 text-[11px] " + (isAr ? "text-right" : "text-left")}
+          style={{ color: "rgba(247,247,248,0.52)" }}
+        >
+          {lang === "en"
+            ? "Availability & prices may vary based on stock."
+            : "التوفر والأسعار قد تتغير حسب المخزون."}
         </div>
       </div>
     </section>
