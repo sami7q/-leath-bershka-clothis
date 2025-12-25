@@ -8,15 +8,6 @@ interface PromosSectionProps {
   lang: Lang;
 }
 
-/**
- * ✅ Leath Bershka — Promos (Reels) Section (Red + Black)
- * - Same background vibe as Hero/Qr/Menu
- * - Mobile: snap carousel + arrows
- * - Desktop: clean grid (2 cols -> 3 cols)
- * - Auto pause out-of-view, resume in-view
- * - No hydration mismatch likes (seeded)
- */
-
 const BRAND = {
   red: "#E31B23",
   redDeep: "#B80F16",
@@ -71,7 +62,6 @@ function PlayPauseIcon({ playing }: { playing: boolean }) {
   );
 }
 
-/** ✅ stable likes (no hydration mismatch) */
 function seededNumberFromString(str: string, min: number, max: number) {
   let h = 5381;
   for (let i = 0; i < str.length; i++) h = (h * 33) ^ str.charCodeAt(i);
@@ -80,7 +70,6 @@ function seededNumberFromString(str: string, min: number, max: number) {
   return min + (n % range);
 }
 
-/** ✅ Intersection observer helper (stable) */
 function useInView<T extends HTMLElement>(threshold = 0.2) {
   const [inView, setInView] = useState(false);
   const [el, setEl] = useState<T | null>(null);
@@ -115,16 +104,17 @@ function Reel({
   const { setEl, inView } = useInView<HTMLDivElement>(0.18);
 
   const [muted, setMuted] = useState(true);
-  const [progress, setProgress] = useState(0); // 0..1
+  const [progress, setProgress] = useState(0);
   const [liked, setLiked] = useState(false);
-  const [likes, setLikes] = useState(() => seededNumberFromString(src, 180, 620));
+  const [likes, setLikes] = useState(() =>
+    seededNumberFromString(src, 180, 620)
+  );
 
   const [showHud, setShowHud] = useState<"play" | "pause" | null>(null);
   const [showHeartBurst, setShowHeartBurst] = useState(false);
 
   const tapTimer = useRef<number | null>(null);
 
-  // time/progress
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
@@ -143,7 +133,6 @@ function Reel({
     };
   }, []);
 
-  // auto pause/resume when out/in view
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
@@ -153,12 +142,9 @@ function Reel({
         if (!inView) {
           if (!v.paused) v.pause();
         } else {
-          // resume only if muted (autoplay safe)
           if (v.paused) await v.play();
         }
-      } catch {
-        // ignore autoplay restrictions
-      }
+      } catch {}
     };
 
     run();
@@ -180,9 +166,7 @@ function Reel({
         v.pause();
         flashHud("pause");
       }
-    } catch {
-      // ignore
-    }
+    } catch {}
   };
 
   const doLikeBurst = () => {
@@ -195,14 +179,12 @@ function Reel({
   };
 
   const onTap = () => {
-    // double tap => like
     if (tapTimer.current) {
       window.clearTimeout(tapTimer.current);
       tapTimer.current = null;
       doLikeBurst();
       return;
     }
-    // single tap => play/pause
     tapTimer.current = window.setTimeout(() => {
       tapTimer.current = null;
       togglePlay();
@@ -223,7 +205,6 @@ function Reel({
     const next = !muted;
     setMuted(next);
     try {
-      // keep playing when toggling sound
       if (v.paused) await v.play();
     } catch {}
   };
@@ -234,7 +215,6 @@ function Reel({
       className={[
         "group relative overflow-hidden rounded-[26px] border transition-transform duration-300 will-change-transform",
         "hover:-translate-y-1",
-        // enter animation
         "opacity-0 translate-y-4",
         inView ? "animate-[fadeUp_0.6s_ease-out_forwards]" : "",
       ].join(" ")}
@@ -245,19 +225,17 @@ function Reel({
         animationDelay: `${Math.min(index * 80, 240)}ms`,
       }}
     >
-      {/* subtle red glow on hover */}
       <div className="pointer-events-none absolute -inset-24 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100">
         <div
           className="h-full w-full"
           style={{
-            background: "radial-gradient(circle at 30% 30%, rgba(227,27,35,0.18), transparent 60%)",
+            background:
+              "radial-gradient(circle at 30% 30%, rgba(227,27,35,0.18), transparent 60%)",
           }}
         />
       </div>
 
-      {/* Frame */}
       <div className={["relative w-full overflow-hidden", frameClassName].join(" ")}>
-        {/* tap layer */}
         <button
           type="button"
           onClick={onTap}
@@ -276,10 +254,8 @@ function Reel({
           preload="metadata"
         />
 
-        {/* overlay */}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/0" />
 
-        {/* badge top */}
         <div className="pointer-events-none absolute left-3 top-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide text-white">
           <span
             className="h-1.5 w-1.5 rounded-full animate-[pulse_1.8s_ease-in-out_infinite]"
@@ -296,7 +272,6 @@ function Reel({
           </span>
         </div>
 
-        {/* center HUD */}
         {showHud && (
           <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center">
             <div className="hud-pop flex items-center justify-center rounded-full bg-black/55 px-4 py-4 text-white backdrop-blur-md shadow-2xl">
@@ -305,7 +280,6 @@ function Reel({
           </div>
         )}
 
-        {/* heart burst */}
         {showHeartBurst && (
           <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center">
             <div className="heart-pop text-white drop-shadow-2xl">
@@ -319,7 +293,6 @@ function Reel({
           </div>
         )}
 
-        {/* progress bar */}
         <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-20 h-1 bg-white/10">
           <div
             className="h-full bg-white/60"
@@ -327,7 +300,6 @@ function Reel({
           />
         </div>
 
-        {/* bottom controls */}
         <div className="absolute bottom-3 left-3 right-3 z-30 flex items-center justify-between gap-2">
           <div className="pointer-events-none inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-[11px] font-extrabold text-white backdrop-blur-md">
             <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
@@ -335,7 +307,6 @@ function Reel({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* like */}
             <button
               type="button"
               onClick={toggleLike}
@@ -347,7 +318,6 @@ function Reel({
               <span className="hidden sm:inline">{likes}</span>
             </button>
 
-            {/* sound */}
             <button
               type="button"
               onClick={toggleMute}
@@ -356,18 +326,18 @@ function Reel({
               title={muted ? "Sound off" : "Sound on"}
             >
               <VolumeIcon muted={muted} />
-              <span className="hidden sm:inline">{muted ? "Sound off" : "Sound on"}</span>
+              <span className="hidden sm:inline">
+                {muted ? "Sound off" : "Sound on"}
+              </span>
             </button>
           </div>
         </div>
 
-        {/* shine sweep on hover */}
         <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <div className="absolute -left-1/2 top-0 h-full w-1/2 -skew-x-12 bg-white/10 blur-sm animate-[shine_1.4s_ease-in-out_infinite]" />
         </div>
       </div>
 
-      {/* local keyframes */}
       <style jsx>{`
         .hud-pop {
           animation: pop 0.52s ease-out;
@@ -409,27 +379,17 @@ function Reel({
 }
 
 export function PromosSection({ lang }: PromosSectionProps) {
-  // ✅ your reels
   const reels = useMemo(
     () => [
-      { src: "/promos/1.mp4", badge: { en: "DROP", ar: "إصدار" } },
-      { src: "/promos/2.mp4", badge: { en: "STYLE", ar: "ستايل" } },
-      { src: "/promos/3.mp4", badge: { en: "VIBE", ar: "فايب" } },
+      { src: "/promos/video1.mp4", badge: { en: "DROP", ar: "إصدار" } },
+      { src: "/promos/video2.mp4", badge: { en: "STYLE", ar: "ستايل" } },
+      { src: "/promos/video3.mp4", badge: { en: "VIBE", ar: "فايب" } },
     ],
     []
   );
 
-  const badgeText = (b: { en: string; ar: string }) => (lang === "ar" ? b.ar : b.en);
-
-  // ✅ Mobile snap controls
-  const scrollerRef = useRef<HTMLDivElement | null>(null);
-  const scrollByCard = (dir: "prev" | "next") => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const card = el.querySelector<HTMLElement>("[data-card]");
-    const step = (card?.offsetWidth ?? 320) + 14;
-    el.scrollBy({ left: dir === "next" ? step : -step, behavior: "smooth" });
-  };
+  const badgeText = (b: { en: string; ar: string }) =>
+    lang === "ar" ? b.ar : b.en;
 
   return (
     <section
@@ -440,7 +400,6 @@ export function PromosSection({ lang }: PromosSectionProps) {
           "radial-gradient(1000px 520px at 18% 8%, rgba(227,27,35,0.10), transparent 62%), linear-gradient(to bottom, rgba(11,15,20,0.98), rgba(11,15,20,0.96))",
       }}
     >
-      {/* soft fade edges */}
       <div className="pointer-events-none absolute inset-0">
         <div
           className="absolute -left-40 -top-40 h-[520px] w-[520px] rounded-full blur-3xl opacity-[0.10]"
@@ -453,106 +412,68 @@ export function PromosSection({ lang }: PromosSectionProps) {
         <div
           className="absolute inset-0 opacity-[0.08]"
           style={{
-            backgroundImage: "radial-gradient(rgba(255,255,255,0.65) 1px, transparent 1px)",
+            backgroundImage:
+              "radial-gradient(rgba(255,255,255,0.65) 1px, transparent 1px)",
             backgroundSize: "26px 26px",
           }}
         />
       </div>
 
       <div className="relative mx-auto max-w-6xl px-3 sm:px-4">
-        {/* header */}
         <div className="mb-6">
-          <p className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.28em]" style={{ color: BRAND.muted }}>
+          <p
+            className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.28em]"
+            style={{ color: BRAND.muted }}
+          >
             {lang === "en" ? "REELS" : "مقاطع"}
           </p>
-          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
-              <h2 className="text-[22px] font-extrabold sm:text-[26px] md:text-[30px]" style={{ color: BRAND.paper }}>
-                {lang === "en" ? "See the details in motion" : "شوف التفاصيل بالحركة"}
-              </h2>
-              <p className="mt-2 max-w-2xl text-[13px] leading-relaxed sm:text-[14px]" style={{ color: "rgba(247,247,248,0.62)" }}>
-                {lang === "en"
-                  ? "Short reels to highlight fabric, fit, and drop vibes. Tap to pause/play, double tap to like."
-                  : "مقاطع قصيرة تبيّن الخامة والقياس والستايل. اضغط إيقاف/تشغيل، دبل-تاب للإعجاب."}
-              </p>
-            </div>
 
-            <div
-              className="hidden md:flex items-center gap-2 rounded-full border px-4 py-2 text-[12px] font-extrabold"
-              style={{
-                borderColor: BRAND.border,
-                backgroundColor: "rgba(255,255,255,0.05)",
-                color: "rgba(247,247,248,0.70)",
-              }}
-            >
-              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: BRAND.red }} />
-              <span>{lang === "en" ? "Tap to interact" : "اضغط للتفاعل"}</span>
-            </div>
-          </div>
+          <h2
+            className="text-[22px] font-extrabold sm:text-[26px] md:text-[30px]"
+            style={{ color: BRAND.paper }}
+          >
+            {lang === "en"
+              ? "See the details in motion"
+              : "شوف التفاصيل بالحركة"}
+          </h2>
+
+          <p
+            className="mt-2 max-w-2xl text-[13px] leading-relaxed sm:text-[14px]"
+            style={{ color: "rgba(247,247,248,0.62)" }}
+          >
+            {lang === "en"
+              ? "Tap to pause/play, double tap to like."
+              : "اضغط إيقاف/تشغيل، دبل-تاب للإعجاب."}
+          </p>
         </div>
 
-        {/* MOBILE: snap carousel */}
-        <div className="md:hidden">
-          <div className="relative -mx-3 px-3">
-            {/* edge fades */}
-            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-[#0B0F14] to-transparent" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-[#0B0F14] to-transparent" />
-
-            <div
-              ref={scrollerRef}
-              className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 pt-1 [scrollbar-width:none] [-ms-overflow-style:none]"
-              dir="ltr"
-            >
-              {reels.map((r, i) => (
-                <div key={i} data-card className="shrink-0 snap-center w-[86vw] max-w-[420px]">
-                  <Reel index={i} src={r.src} badgeText={badgeText(r.badge)} frameClassName="h-[72vh] max-h-[680px]" />
-                </div>
-              ))}
-            </div>
-
-            {/* controls */}
-            <div className="mt-3 flex items-center justify-between">
-              <p className="text-[11px] font-bold" style={{ color: "rgba(247,247,248,0.55)" }}>
-                {lang === "en" ? "Swipe to browse reels." : "اسحب للتنقل بين المقاطع."}
-              </p>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => scrollByCard("prev")}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border bg-white/5 text-white shadow-sm active:scale-[0.98]"
-                  style={{ borderColor: BRAND.border }}
-                  aria-label="Previous"
-                >
-                  <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
-                    <path d="M15 18L9 12l6-6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => scrollByCard("next")}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border bg-white/5 text-white shadow-sm active:scale-[0.98]"
-                  style={{ borderColor: BRAND.border }}
-                  aria-label="Next"
-                >
-                  <svg viewBox="0 0 24 24" className="h-5 w-5 rotate-180" aria-hidden="true">
-                    <path d="M15 18L9 12l6-6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
+        {/* ✅ MOBILE: vertical stack (one under another) */}
+        <div className="md:hidden space-y-4">
+          {reels.map((r, i) => (
+            <Reel
+              key={i}
+              index={i}
+              src={r.src}
+              badgeText={badgeText(r.badge)}
+              frameClassName="h-[72vh] min-h-[520px] max-h-[680px]"
+            />
+          ))}
         </div>
 
-        {/* DESKTOP: grid */}
+        {/* ✅ DESKTOP: grid */}
         <div className="hidden md:grid md:grid-cols-2 md:gap-6 lg:grid-cols-3 lg:gap-7">
           {reels.map((r, i) => (
-            <Reel key={i} index={i} src={r.src} badgeText={badgeText(r.badge)} frameClassName="aspect-[9/16]" />
+            <Reel
+              key={i}
+              index={i}
+              src={r.src}
+              badgeText={badgeText(r.badge)}
+              frameClassName="aspect-[9/16]"
+            />
           ))}
         </div>
       </div>
 
-      {/* global keyframes */}
       <style jsx global>{`
         @keyframes fadeUp {
           from {
@@ -576,9 +497,6 @@ export function PromosSection({ lang }: PromosSectionProps) {
             transform: translateX(240%) skewX(-12deg);
             opacity: 0;
           }
-        }
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
         }
       `}</style>
     </section>
