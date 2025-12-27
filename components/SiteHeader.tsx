@@ -95,36 +95,35 @@ export function SiteHeader({ config, lang, onChangeLang }: SiteHeaderProps) {
       </div>
 
       <div className="mx-auto w-full max-w-7xl px-3 pt-3 sm:px-4 sm:pt-4 lg:px-6">
-        <div
-          className="relative rounded-[999px] border backdrop-blur-md"
-          style={headerCardStyle}
-        >
+        <div className="relative rounded-[999px] border backdrop-blur-md" style={headerCardStyle}>
           {/* md+ overlay: ultra glass */}
           <div
             className="absolute inset-0 hidden rounded-[999px] md:block"
             style={{
-              background:
-                "linear-gradient(90deg, rgba(11,15,20,0.25), rgba(11,15,20,0.38))",
+              background: "linear-gradient(90deg, rgba(11,15,20,0.25), rgba(11,15,20,0.38))",
             }}
           />
 
           <div className="relative flex items-center justify-between gap-2 px-3 py-2 sm:gap-3 sm:px-4 sm:py-3 md:px-5">
             {/* Logo + Brand */}
             <div className="flex min-w-0 items-center gap-2">
+              {/* ✅ Bigger + closer logo (less empty space) */}
               <div
-                className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-white/5 shadow-sm ring-1 sm:h-10 sm:w-10 md:h-11 md:w-11"
+                className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-white/5 shadow-sm ring-1 sm:h-11 sm:w-11 md:h-12 md:w-12"
                 style={{ borderColor: "rgba(255,255,255,0.10)" }}
               >
                 <Image
-                  src="/logo/logo2.png"
+                  src="/logo/logobr.png"
                   alt={isAr ? "ليث بيرشكا" : "Leath Bershka"}
                   fill
-                  sizes="44px"
-                  className="object-cover"
+                  sizes="(max-width: 640px) 44px, (max-width: 768px) 48px, 52px"
+                  className="object-contain p-[2px]"
+                  quality={100}
                   priority
                 />
               </div>
 
+              {/* ✅ Reduce gap a bit on all sizes */}
               <div className={(isAr ? "text-right" : "text-left") + " min-w-0"}>
                 <span
                   className="block truncate text-[14px] font-extrabold tracking-wide sm:text-base md:text-lg"
@@ -136,7 +135,7 @@ export function SiteHeader({ config, lang, onChangeLang }: SiteHeaderProps) {
                   className="hidden truncate text-[11px] font-semibold sm:block"
                   style={{ color: "rgba(247,247,248,0.68)" }}
                 >
-                  {isAr ? "ملابس • ستريت وير" : "Clothing • Streetwear"}
+                  {isAr ? "" : ""}
                 </span>
               </div>
             </div>
@@ -242,14 +241,8 @@ export function SiteHeader({ config, lang, onChangeLang }: SiteHeaderProps) {
 
       {/* Mobile dropdown */}
       {isMenuOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/45 backdrop-blur-sm md:hidden"
-          onClick={toggleMenu}
-        >
-          <div
-            className="absolute inset-x-3 top-[76px] sm:inset-x-4"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 z-40 bg-black/45 backdrop-blur-sm md:hidden" onClick={toggleMenu}>
+          <div className="absolute inset-x-3 top-[76px] sm:inset-x-4" onClick={(e) => e.stopPropagation()}>
             <div
               className="origin-top rounded-3xl border p-3 shadow-2xl backdrop-blur-xl animate-[fadeDown_0.18s_ease-out]"
               style={{
@@ -260,15 +253,12 @@ export function SiteHeader({ config, lang, onChangeLang }: SiteHeaderProps) {
               <div
                 className="mb-2 rounded-2xl px-4 py-3"
                 style={{
-                  background:
-                    "linear-gradient(90deg, rgba(227,27,35,0.16), rgba(227,27,35,0.08))",
+                  background: "linear-gradient(90deg, rgba(227,27,35,0.16), rgba(227,27,35,0.08))",
                   border: "1px solid rgba(227,27,35,0.18)",
                 }}
               >
                 <div
-                  className={
-                    "text-[13px] font-extrabold " + (isAr ? "text-right" : "text-left")
-                  }
+                  className={"text-[13px] font-extrabold " + (isAr ? "text-right" : "text-left")}
                   style={{ color: BRAND.paper }}
                 >
                   {lang === "en" ? "Navigate" : "التنقل"}
@@ -290,10 +280,7 @@ export function SiteHeader({ config, lang, onChangeLang }: SiteHeaderProps) {
                     }}
                   >
                     <span>{t(item.label, lang)}</span>
-                    <span
-                      className="h-1.5 w-1.5 rounded-full"
-                      style={{ backgroundColor: BRAND.red, opacity: 0.75 }}
-                    />
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: BRAND.red, opacity: 0.75 }} />
                   </a>
                 ))}
               </nav>
