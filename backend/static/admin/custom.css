@@ -1,0 +1,266 @@
+/* ============ Leath Bershka Admin Theme (Arabic + Premium) ============ */
+
+:root {
+  --primary: #E31B23;
+  --secondary: #B80F16;
+
+  --bg0: #0B0F14;
+  --bg1: rgba(255, 255, 255, 0.04);
+  --bg2: rgba(255, 255, 255, 0.06);
+
+  --text: #F7F7F8;
+  --muted: rgba(247, 247, 248, 0.70);
+
+  --border: rgba(255, 255, 255, 0.12);
+  --border2: rgba(255, 255, 255, 0.16);
+
+  --shadow: 0 18px 60px rgba(0,0,0,0.28);
+  --shadow2: 0 14px 40px rgba(0,0,0,0.22);
+}
+
+/* Arabic-friendly font */
+body, input, select, textarea, button {
+  font-family: "Tajawal", "Cairo", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif !important;
+}
+
+/* Background */
+body {
+  background: radial-gradient(900px 520px at 15% 5%, rgba(227, 27, 35, 0.16), transparent 60%),
+              linear-gradient(to bottom, rgba(11, 15, 20, 0.98), rgba(11, 15, 20, 0.96));
+  color: var(--text);
+}
+
+/* Links */
+a { color: var(--primary); }
+a:hover { color: #ff4b55; }
+
+/* Header */
+#header {
+  background: rgba(11, 15, 20, 0.98);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+#site-name a {
+  font-weight: 900;
+  letter-spacing: 0.4px;
+}
+
+/* Content area spacing */
+#content {
+  padding: 18px 18px 28px !important;
+}
+
+/* Breadcrumbs */
+div.breadcrumbs {
+  background: var(--bg1);
+  border-bottom: 1px solid var(--border);
+  color: rgba(247,247,248,0.85);
+}
+
+/* Dashboard modules = cards */
+.module, .dashboard #content-main .module {
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--shadow2);
+}
+
+/* Module headers */
+.module h2, .module caption, .inline-group h2 {
+  background: rgba(255,255,255,0.04);
+  color: rgba(247,247,248,0.92);
+  border-bottom: 1px solid var(--border);
+  font-weight: 900;
+}
+
+/* =========================
+   ✅ ADD/CHANGE FORM STYLING
+   ========================= */
+
+/* Form container */
+#content form .aligned,
+#content-main form .aligned {
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: var(--shadow2);
+}
+
+/* Fieldset = card */
+fieldset.module {
+  margin-bottom: 14px !important;
+}
+
+/* Make fieldset content comfortable */
+fieldset.module .form-row {
+  padding: 10px 6px !important;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+fieldset.module .form-row:last-child {
+  border-bottom: 0;
+}
+
+/* Labels */
+.aligned label {
+  color: rgba(247,247,248,0.90) !important;
+  font-weight: 900 !important;
+}
+
+/* Help text */
+.help, p.help, .help-tooltip {
+  color: rgba(247,247,248,0.60) !important;
+}
+
+/* Inputs */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="url"],
+textarea,
+select {
+  background: var(--bg2) !important;
+  color: rgba(247, 247, 248, 0.92) !important;
+  border: 1px solid var(--border2) !important;
+  border-radius: 14px !important;
+  padding: 10px 12px !important;
+}
+
+textarea {
+  min-height: 110px;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none !important;
+  border-color: rgba(227, 27, 35, 0.60) !important;
+  box-shadow: 0 0 0 4px rgba(227, 27, 35, 0.18) !important;
+}
+
+/* File input */
+input[type="file"] {
+  color: rgba(247,247,248,0.9) !important;
+}
+
+/* Error lists */
+.errornote, .errorlist, .errorlist li {
+  border-radius: 14px;
+}
+.errornote {
+  background: rgba(239, 68, 68, 0.14) !important;
+  border: 1px solid rgba(239, 68, 68, 0.28) !important;
+  color: rgba(247,247,248,0.92) !important;
+}
+
+/* Messages */
+ul.messagelist li {
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+/* =========================
+   ✅ BUTTONS & SUBMIT ROW
+   ========================= */
+
+.submit-row {
+  background: transparent !important;
+  border-top: 1px solid rgba(255,255,255,0.10) !important;
+  margin-top: 14px !important;
+  padding: 14px 0 0 !important;
+  display: flex !important;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.button, input[type="submit"], input[type="button"], .submit-row input, a.button {
+  border-radius: 999px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.2px;
+  padding: 10px 16px !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  background: rgba(255,255,255,0.06) !important;
+  color: rgba(247,247,248,0.95) !important;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.22);
+}
+
+.button.default, input[type="submit"].default {
+  background: linear-gradient(135deg, #E31B23, #B80F16) !important;
+  border: 1px solid rgba(227,27,35,0.35) !important;
+  box-shadow: 0 14px 34px rgba(227,27,35,0.20) !important;
+}
+
+.button:hover, input[type="submit"]:hover, a.button:hover {
+  transform: translateY(-1px);
+}
+
+/* Danger button (delete) */
+.deletelink, .inline-deletelink, a.deletelink {
+  background: rgba(239, 68, 68, 0.14) !important;
+  border: 1px solid rgba(239, 68, 68, 0.28) !important;
+  color: rgba(247,247,248,0.95) !important;
+  border-radius: 999px !important;
+  padding: 10px 16px !important;
+}
+
+/* =========================
+   ✅ DELETE CONFIRM PAGE
+   ========================= */
+
+.delete-confirmation, .delete-confirmation #content-main,
+#content-main .delete-confirmation {
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: var(--shadow2);
+}
+
+/* =========================
+   ✅ LIST TABLE
+   ========================= */
+
+#result_list {
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+#result_list thead th {
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+}
+
+#result_list tbody tr:hover {
+  background: rgba(227, 27, 35, 0.08);
+}
+
+/* Filters sidebar */
+#changelist-filter {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 16px;
+  box-shadow: 0 18px 60px rgba(0,0,0,0.22);
+}
+
+/* =========================
+   ✅ MOBILE IMPROVEMENTS
+   ========================= */
+
+@media (max-width: 768px) {
+  #content { padding: 12px !important; }
+
+  #content form .aligned,
+  #content-main form .aligned {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .submit-row input, .submit-row a {
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  fieldset.module .form-row {
+    padding: 10px 2px !important;
+  }
+}
