@@ -6,6 +6,9 @@ import Link from "next/link";
 import { SiteConfig, Lang, LocalizedText } from "../../lib/siteConfig";
 import { useCart } from "@/components/cart/CartProvider";
 
+// ✅ NEW: API fetchers
+import { getCategories, getProducts } from "../../lib/api";
+
 function t(text: LocalizedText, lang: Lang) {
   return lang === "ar" ? text.ar : text.en;
 }
@@ -15,39 +18,28 @@ interface MenuSectionProps {
   lang: Lang;
 }
 
-function getSizeOptions(categoryLabel: string, categoryId: string) {
-  const s = `${categoryId} ${categoryLabel}`.toLowerCase();
+type ApiCategory = {
+  id: number;
+  slug: string;
+  label: LocalizedText;
+};
 
-  const isShoes =
-    s.includes("shoe") ||
-    s.includes("shoes") ||
-    s.includes("حذاء") ||
-    s.includes("أحذية") ||
-    s.includes("احذية");
+type ApiProduct = {
+  id: string;
+  type: "clothes" | "shoes";
+  name: LocalizedText;
+  description: LocalizedText;
+  priceFull: number;
+  oldPrice: number | null;
+  badge: LocalizedText | null;
+  image: string | null;
+};
 
-  if (isShoes) {
-    // 36..46
-    return Array.from({ length: 11 }, (_, i) => String(36 + i));
+function sizeOptionsForType(type: ApiProduct["type"]) {
+  if (type === "shoes") {
+    return Array.from({ length: 11 }, (_, i) => String(36 + i)); // 36..46
   }
-
-  const isClothes =
-    s.includes("tee") ||
-    s.includes("t-shirt") ||
-    s.includes("shirt") ||
-    s.includes("hood") ||
-    s.includes("jacket") ||
-    s.includes("pants") ||
-    s.includes("trouser") ||
-    s.includes("تيشيرت") ||
-    s.includes("تشيرت") ||
-    s.includes("هودي") ||
-    s.includes("جاكيت") ||
-    s.includes("بنطال") ||
-    s.includes("بناطيل");
-
-  if (isClothes) return ["S", "M", "L", "XL"];
-
-  return null;
+  return ["S", "M", "L", "XL"];
 }
 
 export function MenuSection({ config, lang }: MenuSectionProps) {
@@ -70,41 +62,89 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
   );
 
   const currency = config.footer.currencySymbol ?? "";
-  const categories = config.menuSection?.categories ?? [];
 
-  const [activeCategoryId, setActiveCategoryId] = useState<
-    SiteConfig["menuSection"]["categories"][number]["id"]
-  >(categories?.[0]?.id ?? "main");
+  // =========================
+  // ✅ NEW DATA (API)
+  // =========================
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
+  const [activeCategorySlug, setActiveCategorySlug] = useState<string>("");
 
-  const activeCategory =
-    categories.find((c) => c.id === activeCategoryId) ?? categories[0];
+  const [itemsRaw, setItemsRaw] = useState<ApiProduct[]>([]);
+  const [loadingCats, setLoadingCats] = useState(true);
+  const [loadingItems, setLoadingItems] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // Load categories once
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setLoadingCats(true);
+        setError(null);
+        const data = (await getCategories()) as ApiCategory[];
+        if (!mounted) return;
+
+        setCategories(data);
+        setActiveCategorySlug(data?.[0]?.slug ?? "");
+      } catch (e: any) {
+        setError(e?.message || (isAr ? "فشل تحميل الأقسام" : "Failed to load categories"));
+      } finally {
+        setLoadingCats(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [isAr]);
+
+  // Load products when category changes
+  useEffect(() => {
+    if (!activeCategorySlug) return;
+
+    let mounted = true;
+    (async () => {
+      try {
+        setLoadingItems(true);
+        setError(null);
+        const data = (await getProducts({ category: activeCategorySlug })) as ApiProduct[];
+        if (!mounted) return;
+
+        setItemsRaw(data);
+      } catch (e: any) {
+        setError(e?.message || (isAr ? "فشل تحميل المنتجات" : "Failed to load products"));
+      } finally {
+        setLoadingItems(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [activeCategorySlug, isAr]);
+
+  const activeCategory = useMemo(
+    () => categories.find((c) => c.slug === activeCategorySlug) ?? categories[0],
+    [categories, activeCategorySlug]
+  );
+
+  // Keep same sorting logic (items with image first)
   const items = useMemo(() => {
-    const list = (activeCategory?.items ?? []) as any[];
+    const list = (itemsRaw ?? []) as any[];
     return [...list].sort((a, b) => Number(Boolean(b?.image)) - Number(Boolean(a?.image)));
-  }, [activeCategory]);
+  }, [itemsRaw]);
 
   // ✅ size selection per product baseId
   const [selectedSize, setSelectedSize] = useState<Record<string, string>>({});
 
-  const sizeOptions = useMemo(() => {
-    const label = activeCategory ? t(activeCategory.label, lang) : "";
-    const id = activeCategory?.id ?? "";
-    return getSizeOptions(label, id);
-  }, [activeCategory, lang]);
+  const addItem = (item: ApiProduct) => {
+    const baseId = String(item?.id);
 
-  // Optional: set default size on category change
-  useEffect(() => {
-    if (!sizeOptions?.length) return;
-    // do nothing global; we pick default per item on add
-  }, [sizeOptions]);
-
-  const addItem = (item: any) => {
-    const baseId = String(item?.id ?? item?.sku ?? item?.name?.en ?? item?.name?.ar);
     const name = t(item?.name, lang);
-    const price = Number(item?.priceFull ?? item?.price ?? 0);
-    const image = (item?.image as string | undefined) || undefined;
+    const price = Number(item?.priceFull ?? 0);
+    const image = (item?.image as string | null) || undefined;
 
+    const sizeOptions = sizeOptionsForType(item.type);
     const pickedSize = sizeOptions?.length ? (selectedSize[baseId] ?? sizeOptions[0]) : undefined;
 
     // ✅ unique id per size (so same product different size doesn't merge)
@@ -134,17 +174,28 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
       <div className="mx-auto max-w-6xl px-3 sm:px-4">
         {/* HEADER */}
         <div className={"mb-5 " + (isAr ? "text-right" : "text-left")}>
-          <p className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.28em]" style={{ color: BRAND.muted }}>
+          <p
+            className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.28em]"
+            style={{ color: BRAND.muted }}
+          >
             {lang === "en" ? "PRODUCTS" : "المنتجات"}
           </p>
 
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
-              <h2 className="text-[20px] font-extrabold sm:text-[24px] md:text-[28px]" style={{ color: BRAND.paper }}>
+              <h2
+                className="text-[20px] font-extrabold sm:text-[24px] md:text-[28px]"
+                style={{ color: BRAND.paper }}
+              >
                 {lang === "en" ? "Leath Bershka Collection" : "تشكيلة ليث بيرشكا"}
               </h2>
-              <p className="mt-2 max-w-2xl text-[13px] leading-relaxed sm:text-[14px]" style={{ color: BRAND.textMuted }}>
-                {lang === "en" ? "Pick size, add to cart, then checkout via WhatsApp." : "اختر المقاس، أضف للسلة، ثم أتمم الطلب عبر واتساب."}
+              <p
+                className="mt-2 max-w-2xl text-[13px] leading-relaxed sm:text-[14px]"
+                style={{ color: BRAND.textMuted }}
+              >
+                {lang === "en"
+                  ? "Pick size, add to cart, then checkout via WhatsApp."
+                  : "اختر المقاس، أضف للسلة، ثم أتمم الطلب عبر واتساب."}
               </p>
             </div>
 
@@ -161,13 +212,33 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
             >
               {lang === "en" ? "Cart" : "السلة"}
               <span
-                className={"ml-2 inline-flex items-center rounded-full px-2 py-1 text-[11px] font-extrabold " + (isAr ? "mr-2 ml-0" : "")}
-                style={{ background: `linear-gradient(135deg, ${BRAND.red}, ${BRAND.redDeep})`, color: "white" }}
+                className={
+                  "ml-2 inline-flex items-center rounded-full px-2 py-1 text-[11px] font-extrabold " +
+                  (isAr ? "mr-2 ml-0" : "")
+                }
+                style={{
+                  background: `linear-gradient(135deg, ${BRAND.red}, ${BRAND.redDeep})`,
+                  color: "white",
+                }}
               >
                 {count}
               </span>
             </Link>
           </div>
+
+          {/* ✅ Error (small, matches style) */}
+          {error && (
+            <div
+              className={"mt-4 rounded-2xl border px-4 py-3 text-[12px] font-bold " + (isAr ? "text-right" : "text-left")}
+              style={{
+                borderColor: "rgba(227,27,35,0.35)",
+                backgroundColor: "rgba(227,27,35,0.08)",
+                color: "rgba(247,247,248,0.92)",
+              }}
+            >
+              {error}
+            </div>
+          )}
         </div>
 
         {/* CATEGORY FILTERS */}
@@ -176,18 +247,22 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
             <div className="md:hidden -mx-3 px-3 overflow-x-auto">
               <div className="flex w-max gap-2 pb-2">
                 {categories.map((cat) => {
-                  const isActive = cat.id === activeCategoryId;
+                  const isActive = cat.slug === activeCategorySlug;
                   return (
                     <button
                       key={cat.id}
                       type="button"
-                      onClick={() => setActiveCategoryId(cat.id)}
+                      onClick={() => setActiveCategorySlug(cat.slug)}
                       className="whitespace-nowrap rounded-full px-4 py-2 text-[13px] font-extrabold transition active:scale-[0.99]"
                       style={{
-                        background: isActive ? `linear-gradient(135deg, ${BRAND.red}, ${BRAND.redDeep})` : "rgba(255,255,255,0.05)",
+                        background: isActive
+                          ? `linear-gradient(135deg, ${BRAND.red}, ${BRAND.redDeep})`
+                          : "rgba(255,255,255,0.05)",
                         color: BRAND.paper,
                         border: `1px solid ${isActive ? "rgba(227,27,35,0.34)" : BRAND.border}`,
-                        boxShadow: isActive ? "0 14px 40px rgba(227,27,35,0.16)" : "0 14px 40px rgba(0,0,0,0.18)",
+                        boxShadow: isActive
+                          ? "0 14px 40px rgba(227,27,35,0.16)"
+                          : "0 14px 40px rgba(0,0,0,0.18)",
                       }}
                     >
                       {t(cat.label, lang)}
@@ -199,18 +274,22 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
 
             <div className="hidden md:flex md:flex-wrap md:gap-2.5">
               {categories.map((cat) => {
-                const isActive = cat.id === activeCategoryId;
+                const isActive = cat.slug === activeCategorySlug;
                 return (
                   <button
                     key={cat.id}
                     type="button"
-                    onClick={() => setActiveCategoryId(cat.id)}
+                    onClick={() => setActiveCategorySlug(cat.slug)}
                     className="rounded-full px-4 py-2 text-[13px] font-extrabold transition hover:translate-y-[-1px] active:translate-y-0"
                     style={{
-                      background: isActive ? `linear-gradient(135deg, ${BRAND.red}, ${BRAND.redDeep})` : "rgba(255,255,255,0.05)",
+                      background: isActive
+                        ? `linear-gradient(135deg, ${BRAND.red}, ${BRAND.redDeep})`
+                        : "rgba(255,255,255,0.05)",
                       color: BRAND.paper,
                       border: `1px solid ${isActive ? "rgba(227,27,35,0.34)" : BRAND.border}`,
-                      boxShadow: isActive ? "0 14px 40px rgba(227,27,35,0.14)" : "0 14px 40px rgba(0,0,0,0.16)",
+                      boxShadow: isActive
+                        ? "0 14px 40px rgba(227,27,35,0.14)"
+                        : "0 14px 40px rgba(0,0,0,0.16)",
                     }}
                   >
                     {t(cat.label, lang)}
@@ -221,22 +300,38 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
           </div>
         )}
 
+        {/* ✅ Loading state (keeps style) */}
+        {(loadingCats || loadingItems) && (
+          <div
+            className={"mb-5 rounded-2xl border px-4 py-3 text-[12px] font-bold " + (isAr ? "text-right" : "text-left")}
+            style={{
+              borderColor: BRAND.border,
+              backgroundColor: "rgba(255,255,255,0.04)",
+              color: BRAND.textMuted,
+              boxShadow: "0 14px 40px rgba(0,0,0,0.16)",
+            }}
+          >
+            {lang === "en" ? "Loading..." : "جارِ التحميل..."}
+          </div>
+        )}
+
         {/* PRODUCTS GRID */}
         <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {items.map((item: any) => {
-            const itemImage = item?.image as string | undefined;
-            const badge = item?.badge as LocalizedText | undefined;
-            const oldPrice = item?.oldPrice as number | undefined;
+          {items.map((item: ApiProduct) => {
+            const itemImage = item?.image || undefined;
+            const badge = item?.badge ?? undefined;
+            const oldPrice = item?.oldPrice ?? undefined;
 
             const price = Number(item?.priceFull ?? 0);
             const hasDiscount = typeof oldPrice === "number" && oldPrice > price;
 
-            const baseId = String(item?.id ?? item?.sku ?? item?.name?.en ?? item?.name?.ar);
+            const baseId = String(item.id);
+            const sizeOptions = sizeOptionsForType(item.type);
             const picked = sizeOptions?.length ? (selectedSize[baseId] ?? sizeOptions[0]) : undefined;
 
             return (
               <article
-                key={String(item?.id ?? baseId)}
+                key={baseId}
                 className="group relative overflow-hidden rounded-2xl border transition"
                 style={{
                   backgroundColor: BRAND.card,
@@ -246,7 +341,9 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
               >
                 <div
                   className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                  style={{ background: "radial-gradient(380px 200px at 20% 0%, rgba(227,27,35,0.12), transparent 60%)" }}
+                  style={{
+                    background: "radial-gradient(380px 200px at 20% 0%, rgba(227,27,35,0.12), transparent 60%)",
+                  }}
                 />
 
                 <div className="relative aspect-[1/1.12] w-full overflow-hidden">
@@ -314,7 +411,7 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
                     {t(item?.description, lang)}
                   </p>
 
-                  {/* ✅ SIZE OPTIONS */}
+                  {/* ✅ SIZE OPTIONS (same UI, new logic by item.type) */}
                   {sizeOptions?.length ? (
                     <div className={"mt-2 flex flex-wrap gap-1.5 " + (isAr ? "justify-end" : "")}>
                       {sizeOptions.map((opt) => {
@@ -326,9 +423,7 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
                             onClick={() => setSelectedSize((p) => ({ ...p, [baseId]: opt }))}
                             className="rounded-full px-2.5 py-1 text-[11px] font-extrabold transition active:scale-[0.98]"
                             style={{
-                              background: active
-                                ? `linear-gradient(135deg, ${BRAND.red}, ${BRAND.redDeep})`
-                                : "rgba(255,255,255,0.05)",
+                              background: active ? `linear-gradient(135deg, ${BRAND.red}, ${BRAND.redDeep})` : "rgba(255,255,255,0.05)",
                               border: `1px solid ${active ? "rgba(227,27,35,0.35)" : BRAND.border}`,
                               color: BRAND.paper,
                             }}
@@ -360,7 +455,10 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
           })}
         </div>
 
-        <div className={"mt-7 text-[11px] " + (isAr ? "text-right" : "text-left")} style={{ color: "rgba(247,247,248,0.52)" }}>
+        <div
+          className={"mt-7 text-[11px] " + (isAr ? "text-right" : "text-left")}
+          style={{ color: "rgba(247,247,248,0.52)" }}
+        >
           {lang === "en" ? "Availability & prices may vary based on stock." : "التوفر والأسعار قد تتغير حسب المخزون."}
         </div>
       </div>

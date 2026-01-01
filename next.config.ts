@@ -3,6 +3,25 @@ import type { NextConfig } from "next";
 const ONE_YEAR = "public, max-age=31536000, immutable";
 
 const nextConfig: NextConfig = {
+  // ✅ Allow Django media images in dev (and later you can add your domain)
+  images: {
+    remotePatterns: [
+      {
+        protocol: "http",
+        hostname: "127.0.0.1",
+        port: "8000",
+        pathname: "/media/**",
+      },
+      // optional (same machine, some setups use localhost)
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "8000",
+        pathname: "/media/**",
+      },
+    ],
+  },
+
   async headers() {
     return [
       // ===== Images =====
