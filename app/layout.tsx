@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Cairo } from "next/font/google";
+import { CartProvider } from "@/components/cart/CartProvider";
 
 const cairo = Cairo({
   subsets: ["latin", "arabic"],
@@ -22,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${cairo.className} bg-slate-50 text-slate-900`}>
-        {children}
+        <CartProvider>{children}</CartProvider>
       </body>
     </html>
   );

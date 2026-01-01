@@ -1,9 +1,10 @@
-// components/sections/MenuSection.tsx
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { SiteConfig, Lang, LocalizedText } from "../../lib/siteConfig";
+import { useCart } from "@/components/cart/CartProvider";
 
 function t(text: LocalizedText, lang: Lang) {
   return lang === "ar" ? text.ar : text.en;
@@ -14,15 +15,44 @@ interface MenuSectionProps {
   lang: Lang;
 }
 
-/**
- * ✅ Leath Bershka — Products Section (Compact Grid)
- * - Mobile: 2 columns (so 8 items => 4 rows "4 تحت 4" بشكل عملي)
- * - Tablet: 3 columns
- * - Desktop: 4 columns (شبكي أنيق)
- * - Smaller cards + smaller image ratio + tighter paddings
- */
+function getSizeOptions(categoryLabel: string, categoryId: string) {
+  const s = `${categoryId} ${categoryLabel}`.toLowerCase();
+
+  const isShoes =
+    s.includes("shoe") ||
+    s.includes("shoes") ||
+    s.includes("حذاء") ||
+    s.includes("أحذية") ||
+    s.includes("احذية");
+
+  if (isShoes) {
+    // 36..46
+    return Array.from({ length: 11 }, (_, i) => String(36 + i));
+  }
+
+  const isClothes =
+    s.includes("tee") ||
+    s.includes("t-shirt") ||
+    s.includes("shirt") ||
+    s.includes("hood") ||
+    s.includes("jacket") ||
+    s.includes("pants") ||
+    s.includes("trouser") ||
+    s.includes("تيشيرت") ||
+    s.includes("تشيرت") ||
+    s.includes("هودي") ||
+    s.includes("جاكيت") ||
+    s.includes("بنطال") ||
+    s.includes("بناطيل");
+
+  if (isClothes) return ["S", "M", "L", "XL"];
+
+  return null;
+}
+
 export function MenuSection({ config, lang }: MenuSectionProps) {
   const isAr = lang === "ar";
+  const { add, count } = useCart();
 
   const BRAND = useMemo(
     () => ({
@@ -35,7 +65,6 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
       border: "rgba(255,255,255,0.10)",
       borderStrong: "rgba(255,255,255,0.14)",
       card: "rgba(255,255,255,0.04)",
-      cardHover: "rgba(255,255,255,0.06)",
     }),
     []
   );
@@ -52,14 +81,45 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
 
   const items = useMemo(() => {
     const list = (activeCategory?.items ?? []) as any[];
-    return [...list].sort(
-      (a, b) => Number(Boolean(b?.image)) - Number(Boolean(a?.image))
-    );
+    return [...list].sort((a, b) => Number(Boolean(b?.image)) - Number(Boolean(a?.image)));
   }, [activeCategory]);
 
-  const handleScrollToContact = () => {
-    const el = document.getElementById("contact");
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  // ✅ size selection per product baseId
+  const [selectedSize, setSelectedSize] = useState<Record<string, string>>({});
+
+  const sizeOptions = useMemo(() => {
+    const label = activeCategory ? t(activeCategory.label, lang) : "";
+    const id = activeCategory?.id ?? "";
+    return getSizeOptions(label, id);
+  }, [activeCategory, lang]);
+
+  // Optional: set default size on category change
+  useEffect(() => {
+    if (!sizeOptions?.length) return;
+    // do nothing global; we pick default per item on add
+  }, [sizeOptions]);
+
+  const addItem = (item: any) => {
+    const baseId = String(item?.id ?? item?.sku ?? item?.name?.en ?? item?.name?.ar);
+    const name = t(item?.name, lang);
+    const price = Number(item?.priceFull ?? item?.price ?? 0);
+    const image = (item?.image as string | undefined) || undefined;
+
+    const pickedSize = sizeOptions?.length ? (selectedSize[baseId] ?? sizeOptions[0]) : undefined;
+
+    // ✅ unique id per size (so same product different size doesn't merge)
+    const cartId = pickedSize ? `${baseId}__${pickedSize}` : baseId;
+
+    add(
+      {
+        id: cartId,
+        name,
+        price,
+        image,
+        size: pickedSize,
+      },
+      1
+    );
   };
 
   return (
@@ -72,36 +132,25 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
       }}
     >
       <div className="mx-auto max-w-6xl px-3 sm:px-4">
-        {/* ===================== HEADER ===================== */}
+        {/* HEADER */}
         <div className={"mb-5 " + (isAr ? "text-right" : "text-left")}>
-          <p
-            className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.28em]"
-            style={{ color: BRAND.muted }}
-          >
+          <p className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.28em]" style={{ color: BRAND.muted }}>
             {lang === "en" ? "PRODUCTS" : "المنتجات"}
           </p>
 
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
-              <h2
-                className="text-[20px] font-extrabold sm:text-[24px] md:text-[28px]"
-                style={{ color: BRAND.paper }}
-              >
+              <h2 className="text-[20px] font-extrabold sm:text-[24px] md:text-[28px]" style={{ color: BRAND.paper }}>
                 {lang === "en" ? "Leath Bershka Collection" : "تشكيلة ليث بيرشكا"}
               </h2>
-              <p
-                className="mt-2 max-w-2xl text-[13px] leading-relaxed sm:text-[14px]"
-                style={{ color: BRAND.textMuted }}
-              >
-                {lang === "en"
-                  ? ""
-                  : ""}
+              <p className="mt-2 max-w-2xl text-[13px] leading-relaxed sm:text-[14px]" style={{ color: BRAND.textMuted }}>
+                {lang === "en" ? "Pick size, add to cart, then checkout via WhatsApp." : "اختر المقاس، أضف للسلة، ثم أتمم الطلب عبر واتساب."}
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={handleScrollToContact}
+            {/* Cart button */}
+            <Link
+              href="/cart"
               className="inline-flex items-center justify-center rounded-full px-4 py-2 text-[13px] font-extrabold transition active:scale-[0.98]"
               style={{
                 background: "rgba(255,255,255,0.05)",
@@ -110,34 +159,20 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
                 boxShadow: "0 14px 40px rgba(0,0,0,0.22)",
               }}
             >
-              {lang === "en" ? "Order via WhatsApp" : "اطلب عبر واتساب"}
+              {lang === "en" ? "Cart" : "السلة"}
               <span
-                className={
-                  "ml-2 inline-flex h-7 w-7 items-center justify-center rounded-full " +
-                  (isAr ? "mr-2 ml-0" : "")
-                }
-                style={{
-                  background: `linear-gradient(135deg, ${BRAND.red}, ${BRAND.redDeep})`,
-                }}
+                className={"ml-2 inline-flex items-center rounded-full px-2 py-1 text-[11px] font-extrabold " + (isAr ? "mr-2 ml-0" : "")}
+                style={{ background: `linear-gradient(135deg, ${BRAND.red}, ${BRAND.redDeep})`, color: "white" }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M9 18L15 12L9 6"
-                    stroke="white"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                {count}
               </span>
-            </button>
+            </Link>
           </div>
         </div>
 
-        {/* ===================== CATEGORY FILTERS ===================== */}
+        {/* CATEGORY FILTERS */}
         {categories.length > 1 && (
           <div className="mb-5">
-            {/* Mobile chips */}
             <div className="md:hidden -mx-3 px-3 overflow-x-auto">
               <div className="flex w-max gap-2 pb-2">
                 {categories.map((cat) => {
@@ -149,16 +184,10 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
                       onClick={() => setActiveCategoryId(cat.id)}
                       className="whitespace-nowrap rounded-full px-4 py-2 text-[13px] font-extrabold transition active:scale-[0.99]"
                       style={{
-                        background: isActive
-                          ? `linear-gradient(135deg, ${BRAND.red}, ${BRAND.redDeep})`
-                          : "rgba(255,255,255,0.05)",
+                        background: isActive ? `linear-gradient(135deg, ${BRAND.red}, ${BRAND.redDeep})` : "rgba(255,255,255,0.05)",
                         color: BRAND.paper,
-                        border: `1px solid ${
-                          isActive ? "rgba(227,27,35,0.34)" : BRAND.border
-                        }`,
-                        boxShadow: isActive
-                          ? "0 14px 40px rgba(227,27,35,0.16)"
-                          : "0 14px 40px rgba(0,0,0,0.18)",
+                        border: `1px solid ${isActive ? "rgba(227,27,35,0.34)" : BRAND.border}`,
+                        boxShadow: isActive ? "0 14px 40px rgba(227,27,35,0.16)" : "0 14px 40px rgba(0,0,0,0.18)",
                       }}
                     >
                       {t(cat.label, lang)}
@@ -168,7 +197,6 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
               </div>
             </div>
 
-            {/* Desktop */}
             <div className="hidden md:flex md:flex-wrap md:gap-2.5">
               {categories.map((cat) => {
                 const isActive = cat.id === activeCategoryId;
@@ -179,16 +207,10 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
                     onClick={() => setActiveCategoryId(cat.id)}
                     className="rounded-full px-4 py-2 text-[13px] font-extrabold transition hover:translate-y-[-1px] active:translate-y-0"
                     style={{
-                      background: isActive
-                        ? `linear-gradient(135deg, ${BRAND.red}, ${BRAND.redDeep})`
-                        : "rgba(255,255,255,0.05)",
+                      background: isActive ? `linear-gradient(135deg, ${BRAND.red}, ${BRAND.redDeep})` : "rgba(255,255,255,0.05)",
                       color: BRAND.paper,
-                      border: `1px solid ${
-                        isActive ? "rgba(227,27,35,0.34)" : BRAND.border
-                      }`,
-                      boxShadow: isActive
-                        ? "0 14px 40px rgba(227,27,35,0.14)"
-                        : "0 14px 40px rgba(0,0,0,0.16)",
+                      border: `1px solid ${isActive ? "rgba(227,27,35,0.34)" : BRAND.border}`,
+                      boxShadow: isActive ? "0 14px 40px rgba(227,27,35,0.14)" : "0 14px 40px rgba(0,0,0,0.16)",
                     }}
                   >
                     {t(cat.label, lang)}
@@ -199,9 +221,7 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
           </div>
         )}
 
-        {/* ===================== PRODUCTS GRID (SMALLER) ===================== */}
-        {/* ✅ Mobile: 2 cols (4 rows for 8 items) — practical & readable */}
-        {/* ✅ Desktop: 4 cols, XL: 5 cols for ultra-grid look */}
+        {/* PRODUCTS GRID */}
         <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {items.map((item: any) => {
             const itemImage = item?.image as string | undefined;
@@ -211,9 +231,12 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
             const price = Number(item?.priceFull ?? 0);
             const hasDiscount = typeof oldPrice === "number" && oldPrice > price;
 
+            const baseId = String(item?.id ?? item?.sku ?? item?.name?.en ?? item?.name?.ar);
+            const picked = sizeOptions?.length ? (selectedSize[baseId] ?? sizeOptions[0]) : undefined;
+
             return (
               <article
-                key={item?.id}
+                key={String(item?.id ?? baseId)}
                 className="group relative overflow-hidden rounded-2xl border transition"
                 style={{
                   backgroundColor: BRAND.card,
@@ -221,16 +244,11 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
                   boxShadow: "0 14px 40px rgba(0,0,0,0.16)",
                 }}
               >
-                {/* subtle hover */}
                 <div
                   className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                  style={{
-                    background:
-                      "radial-gradient(380px 200px at 20% 0%, rgba(227,27,35,0.12), transparent 60%)",
-                  }}
+                  style={{ background: "radial-gradient(380px 200px at 20% 0%, rgba(227,27,35,0.12), transparent 60%)" }}
                 />
 
-                {/* ✅ Smaller image area */}
                 <div className="relative aspect-[1/1.12] w-full overflow-hidden">
                   {itemImage ? (
                     <>
@@ -249,7 +267,6 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
                     </div>
                   )}
 
-                  {/* ✅ Smaller badge */}
                   <div className="absolute left-2 top-2">
                     <div
                       className="inline-flex items-center rounded-full px-2 py-0.5 text-[9.5px] font-extrabold"
@@ -260,15 +277,11 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
                         backdropFilter: "blur(10px)",
                       }}
                     >
-                      <span
-                        className="mr-1.5 inline-flex h-1.5 w-1.5 rounded-full"
-                        style={{ backgroundColor: BRAND.red }}
-                      />
+                      <span className="mr-1.5 inline-flex h-1.5 w-1.5 rounded-full" style={{ backgroundColor: BRAND.red }} />
                       {badge ? t(badge, lang) : lang === "en" ? "New" : "جديد"}
                     </div>
                   </div>
 
-                  {/* ✅ Smaller price pill */}
                   <div className="absolute bottom-2 right-2">
                     <div
                       className="inline-flex items-baseline gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-extrabold"
@@ -292,81 +305,63 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
                   </div>
                 </div>
 
-                {/* ✅ Compact content */}
-                <div
-                  className={
-                    "p-2.5 sm:p-3 " + (isAr ? "text-right" : "text-left")
-                  }
-                >
-                  <h3
-                    className="text-[12.5px] font-extrabold sm:text-[13.5px]"
-                    style={{ color: BRAND.paper }}
-                  >
+                <div className={"p-2.5 sm:p-3 " + (isAr ? "text-right" : "text-left")}>
+                  <h3 className="text-[12.5px] font-extrabold sm:text-[13.5px]" style={{ color: BRAND.paper }}>
                     {t(item?.name, lang)}
                   </h3>
 
-                  <p
-                    className="mt-1 line-clamp-2 text-[11px] leading-relaxed sm:text-[12px]"
-                    style={{ color: BRAND.textMuted }}
-                  >
+                  <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed sm:text-[12px]" style={{ color: BRAND.textMuted }}>
                     {t(item?.description, lang)}
                   </p>
 
-                  {/* ✅ Tiny actions (mobile-friendly) */}
-                  <div
-                    className={
-                      "mt-2 flex items-center gap-2 " +
-                      (isAr ? "justify-end" : "")
-                    }
-                  >
-                    <a
-                      href="#contact"
-                      className="inline-flex flex-1 items-center justify-center rounded-xl px-2.5 py-2 text-[12px] font-extrabold transition active:scale-[0.99]"
-                      style={{
-                        background: "rgba(255,255,255,0.05)",
-                        border: `1px solid ${BRAND.border}`,
-                        color: BRAND.paper,
-                      }}
-                    >
-                      {lang === "en" ? "Order" : "اطلب"}
-                    </a>
+                  {/* ✅ SIZE OPTIONS */}
+                  {sizeOptions?.length ? (
+                    <div className={"mt-2 flex flex-wrap gap-1.5 " + (isAr ? "justify-end" : "")}>
+                      {sizeOptions.map((opt) => {
+                        const active = picked === opt;
+                        return (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => setSelectedSize((p) => ({ ...p, [baseId]: opt }))}
+                            className="rounded-full px-2.5 py-1 text-[11px] font-extrabold transition active:scale-[0.98]"
+                            style={{
+                              background: active
+                                ? `linear-gradient(135deg, ${BRAND.red}, ${BRAND.redDeep})`
+                                : "rgba(255,255,255,0.05)",
+                              border: `1px solid ${active ? "rgba(227,27,35,0.35)" : BRAND.border}`,
+                              color: BRAND.paper,
+                            }}
+                            aria-pressed={active}
+                          >
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
 
-                    <button
-                      type="button"
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-xl border transition active:scale-[0.99]"
-                      style={{
-                        borderColor: BRAND.border,
-                        background: "rgba(255,255,255,0.04)",
-                        color: BRAND.paper,
-                      }}
-                      aria-label={lang === "en" ? "Favorite" : "مفضلة"}
-                      title={lang === "en" ? "Favorite" : "مفضلة"}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path
-                          d="M12 21s-7-4.35-9.33-8.3C.56 9.2 2.14 6 5.6 6c1.9 0 3.13 1.01 3.9 2.02C10.27 7.01 11.5 6 13.4 6c3.46 0 5.04 3.2 2.93 6.7C19 16.65 12 21 12 21Z"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
+                  {/* Add to cart */}
+                  <button
+                    type="button"
+                    onClick={() => addItem(item)}
+                    className="mt-2 inline-flex w-full items-center justify-center rounded-xl px-3 py-2 text-[12px] font-extrabold transition active:scale-[0.99]"
+                    style={{
+                      background: `linear-gradient(135deg, ${BRAND.red}, ${BRAND.redDeep})`,
+                      color: "white",
+                      boxShadow: "0 14px 34px rgba(227,27,35,0.20)",
+                    }}
+                  >
+                    {lang === "en" ? "Add to Cart" : "إضافة للسلة"}
+                  </button>
                 </div>
               </article>
             );
           })}
         </div>
 
-        {/* Footer note */}
-        <div
-          className={"mt-7 text-[11px] " + (isAr ? "text-right" : "text-left")}
-          style={{ color: "rgba(247,247,248,0.52)" }}
-        >
-          {lang === "en"
-            ? "Availability & prices may vary based on stock."
-            : "التوفر والأسعار قد تتغير حسب المخزون."}
+        <div className={"mt-7 text-[11px] " + (isAr ? "text-right" : "text-left")} style={{ color: "rgba(247,247,248,0.52)" }}>
+          {lang === "en" ? "Availability & prices may vary based on stock." : "التوفر والأسعار قد تتغير حسب المخزون."}
         </div>
       </div>
     </section>
