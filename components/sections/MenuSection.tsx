@@ -94,8 +94,8 @@ export function MenuSection({ config, lang }: MenuSectionProps) {
                 style={{ color: BRAND.textMuted }}
               >
                 {lang === "en"
-                  ? "Premium pieces, clean cuts, and modern streetwear essentials."
-                  : "قطع مميزة بخامات ممتازة، قصّات نظيفة، وستريت وير عصري."}
+                  ? ""
+                  : ""}
               </p>
             </div>
 

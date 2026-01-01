@@ -37,7 +37,7 @@ export function HeroSection({ config, lang }: HeroSectionProps) {
           {/* Background */}
           <div className="absolute inset-0">
             <Image
-              src="/bg.svg"
+              src="/bgs1.svg"
               alt="Banner"
               fill
               priority
@@ -136,7 +136,7 @@ export function HeroSection({ config, lang }: HeroSectionProps) {
         {/* ===================== DESKTOP (UNCHANGED) ===================== */}
         <div className="relative hidden md:block h-[70vh] lg:h-[88vh] min-h-[680px] w-full">
           <div className="absolute inset-0">
-            <Image src="/bg.svg" alt="Banner" fill priority className="object-cover" />
+            <Image src="/bgs1.svg" alt="Banner" fill priority className="object-cover" />
           </div>
 
           <div

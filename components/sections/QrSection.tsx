@@ -18,16 +18,17 @@ const BRAND = {
   red: "#E31B23",
   redDeep: "#B80F16",
   ink: "#0B0F14",
-  paper: "#F7F7F8",
 };
 
 type ProductImage = {
   src: string;
   name: LocalizedText;
-  description: LocalizedText;
-  price: number;
-  oldPrice?: number;
   badge?: LocalizedText;
+  depth: number; // parallax depth for drift
+  size: { w: string; h: string };
+  cls: string; // position class
+  floatCls: string; // animation class
+  priority?: boolean;
 };
 
 function clamp(n: number, a: number, b: number) {
@@ -36,59 +37,91 @@ function clamp(n: number, a: number, b: number) {
 
 /**
  * Floating layer (DISPLAY ONLY)
- * - Fixed images: /sho1.png .. /sho5.png
- * - Mobile improved: starts lower, better spacing, safer around header
+ * ✅ No nested styled-jsx (single <style jsx> only)
+ * ✅ Premium on mobile:
+ * - Center hero + orbit rings
+ * - Sparkles + mesh glow
+ * - Drift reacts to finger/mouse movement (subtle)
+ * - Better positions (avoids bottom text)
  */
 function FloatingProducts({
   lang,
   isAr,
   parallaxY,
   opacity,
+  driftX,
+  driftY,
 }: {
   lang: Lang;
   isAr: boolean;
   parallaxY: number;
   opacity: number;
+  driftX: number;
+  driftY: number;
 }) {
   const images: ProductImage[] = useMemo(
     () => [
       {
         src: "/sho.png",
         name: { en: "Shoe 1", ar: "حذاء 1" },
-        description: { en: "", ar: "" },
-        price: 0,
+        badge: { en: "NEW", ar: "جديد" },
+        depth: 0.75,
+        size: { w: "clamp(82px, 22vw, 150px)", h: "clamp(82px, 22vw, 150px)" },
+        cls: "fp-i1",
+        floatCls: "float-a",
+        priority: true,
       },
       {
         src: "/sho2.png",
         name: { en: "Shoe 2", ar: "حذاء 2" },
-        description: { en: "", ar: "" },
-        price: 0,
+        badge: { en: "LIMITED", ar: "محدود" },
+        depth: 0.85,
+        size: { w: "clamp(78px, 21vw, 160px)", h: "clamp(78px, 21vw, 160px)" },
+        cls: "fp-i2",
+        floatCls: "float-b",
+        priority: true,
       },
       {
         src: "/sho3.png",
         name: { en: "Shoe 3", ar: "حذاء 3" },
-        description: { en: "", ar: "" },
-        price: 0,
+        badge: { en: "TREND", ar: "ترند" },
+        depth: 0.95,
+        size: { w: "clamp(88px, 24vw, 175px)", h: "clamp(88px, 24vw, 175px)" },
+        cls: "fp-i3",
+        floatCls: "float-c",
       },
       {
         src: "/sho4.png",
         name: { en: "Shoe 4", ar: "حذاء 4" },
-        description: { en: "", ar: "" },
-        price: 0,
+        badge: { en: "HOT", ar: "مميز" },
+        depth: 0.9,
+        size: { w: "clamp(74px, 20vw, 165px)", h: "clamp(74px, 20vw, 165px)" },
+        cls: "fp-i4",
+        floatCls: "float-d",
       },
       {
         src: "/sho5.png",
         name: { en: "Shoe 5", ar: "حذاء 5" },
-        description: { en: "", ar: "" },
-        price: 0,
+        badge: { en: "FEATURED", ar: "الأفضل" },
+        depth: 1.15,
+        size: { w: "clamp(168px, 46vw, 290px)", h: "clamp(168px, 46vw, 290px)" },
+        cls: "fp-i5",
+        floatCls: "float-e",
+        priority: true,
       },
     ],
     []
   );
 
+  // ✅ we avoid nested <style jsx> by using inline style for the center shift
+  const centerShiftTransform = isAr
+    ? "translate(-50%, -50%) translateX(-16%)"
+    : "translate(-50%, -50%) translateX(16%)";
+
   return (
     <div
       className="pointer-events-none absolute inset-0 overflow-hidden"
+      data-dir={isAr ? "rtl" : "ltr"}
       style={{
         transform: `translate3d(0, ${parallaxY}px, 0)`,
         willChange: "transform, opacity",
@@ -96,214 +129,373 @@ function FloatingProducts({
       }}
       aria-hidden="true"
     >
-      {/* Top-left */}
-      <div className="fp-top-left absolute">
-        <div className="float-a relative">
-          <div className="relative h-[104px] w-[104px] sm:h-[132px] sm:w-[132px] md:h-[170px] md:w-[170px]">
-            <Image
-              src={images[0].src}
-              alt={t(images[0].name, lang)}
-              fill
-              className="object-contain drop-shadow-[0_26px_44px_rgba(0,0,0,0.32)]"
-              sizes="(min-width: 768px) 170px, 132px"
-              unoptimized
-              priority
-            />
-          </div>
-        </div>
-      </div>
+      {/* mesh glow (behind) */}
+      <div className="fp-mesh absolute inset-0" />
 
-      {/* Top-right */}
-      <div className="fp-top-right absolute">
-        <div className="float-b relative">
-          <div className="relative h-[100px] w-[100px] sm:h-[132px] sm:w-[132px] md:h-[180px] md:w-[180px]">
-            <Image
-              src={images[1].src}
-              alt={t(images[1].name, lang)}
-              fill
-              className="object-contain drop-shadow-[0_26px_44px_rgba(0,0,0,0.32)]"
-              sizes="(min-width: 768px) 180px, 132px"
-              unoptimized
-              priority
-            />
-          </div>
-        </div>
-      </div>
+      {/* Items */}
+      {images.map((img) => {
+        const dx = driftX * img.depth;
+        const dy = driftY * img.depth;
 
-      {/* Bottom-left */}
-      <div className="fp-bottom-left absolute">
-        <div className="float-c relative">
-          <div className="relative h-[118px] w-[118px] sm:h-[148px] sm:w-[148px] md:h-[190px] md:w-[190px]">
-            <Image
-              src={images[2].src}
-              alt={t(images[2].name, lang)}
-              fill
-              className="object-contain drop-shadow-[0_30px_54px_rgba(0,0,0,0.34)]"
-              sizes="(min-width: 768px) 190px, 148px"
-              unoptimized
-              priority
-            />
-          </div>
-        </div>
-      </div>
+        return (
+          <div
+            key={img.src}
+            className={"fp-item absolute " + img.cls}
+            style={img.cls === "fp-i5" ? { transform: centerShiftTransform } : undefined}
+          >
+            <div
+              className={img.floatCls + " relative"}
+              style={{
+                transform: `translate3d(${dx}px, ${dy}px, 0)`,
+                willChange: "transform",
+              }}
+            >
+              <div
+                className="fp-card relative"
+                style={{
+                  width: img.size.w,
+                  height: img.size.h,
+                }}
+              >
+                {/* glass halo */}
+                <div className="fp-halo absolute inset-0 rounded-full" />
 
-      {/* Bottom-right */}
-      <div className="fp-bottom-right absolute hidden sm:block">
-        <div className="float-d relative">
-          <div className="relative h-[126px] w-[126px] sm:h-[156px] sm:w-[156px] md:h-[205px] md:w-[205px]">
-            <Image
-              src={images[3].src}
-              alt={t(images[3].name, lang)}
-              fill
-              className="object-contain drop-shadow-[0_32px_60px_rgba(0,0,0,0.36)]"
-              sizes="(min-width: 768px) 205px, 156px"
-              unoptimized
-              priority
-            />
-          </div>
-        </div>
-      </div>
+                {/* orbit rings only for center hero */}
+                {img.cls === "fp-i5" && (
+                  <div className="fp-orbit pointer-events-none absolute inset-[-18px]">
+                    <div className="fp-ring fp-ring1" />
+                    <div className="fp-ring fp-ring2" />
+                  </div>
+                )}
 
-      {/* Center */}
+                <Image
+                  src={img.src}
+                  alt={t(img.name, lang)}
+                  fill
+                  className="object-contain drop-shadow-[0_26px_44px_rgba(0,0,0,0.34)]"
+                  sizes={
+                    img.cls === "fp-i5"
+                      ? "(min-width: 768px) 290px, 46vw"
+                      : "(min-width: 768px) 175px, 24vw"
+                  }
+                  unoptimized
+                  priority={!!img.priority}
+                />
+
+                {/* shine sweep */}
+                <div className="fp-shine absolute inset-0 rounded-full" />
+              </div>
+
+              {/* badge pill */}
+              {img.badge && (
+                <div className="fp-badgeWrap absolute -bottom-3 left-1/2 -translate-x-1/2">
+                  <div className="fp-badge inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-extrabold tracking-[0.18em] uppercase">
+                    {t(img.badge, lang)}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* brand glows */}
       <div
-        className={
-          "fp-center absolute hidden md:block " +
-          (isAr ? "left-1/2" : "right-1/2")
-        }
-        style={{ transform: isAr ? "translateX(-30%)" : "translateX(30%)" }}
-      >
-        <div className="float-e relative">
-          <div className="relative h-[230px] w-[230px]">
-            <Image
-              src={images[4].src}
-              alt={t(images[4].name, lang)}
-              fill
-              className="object-contain opacity-[0.94] drop-shadow-[0_36px_72px_rgba(0,0,0,0.40)]"
-              sizes="230px"
-              unoptimized
-              priority
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Brand glows */}
-      <div
-        className="absolute -left-32 -top-28 h-[320px] w-[320px] rounded-full blur-3xl opacity-[0.22]"
+        className="absolute -left-36 -top-28 h-[360px] w-[360px] rounded-full blur-3xl opacity-[0.20]"
         style={{ backgroundColor: BRAND.red }}
       />
       <div
-        className="absolute -right-28 -bottom-32 h-[380px] w-[380px] rounded-full blur-3xl opacity-[0.18]"
+        className="absolute -right-32 -bottom-36 h-[420px] w-[420px] rounded-full blur-3xl opacity-[0.16]"
         style={{ backgroundColor: BRAND.redDeep }}
       />
 
-      {/* vignette */}
+      {/* sparkles */}
+      <div className="fp-spark fp-s1" />
+      <div className="fp-spark fp-s2" />
+      <div className="fp-spark fp-s3" />
+      <div className="fp-spark fp-s4" />
+      <div className="fp-spark fp-s5" />
+
+      {/* vignette (top layer) */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.42]"
+        className="pointer-events-none absolute inset-0 opacity-[0.44]"
         style={{
           background:
-            "radial-gradient(900px 520px at 50% 38%, transparent 0%, transparent 54%, rgba(0,0,0,0.62) 100%)",
+            "radial-gradient(980px 560px at 50% 38%, transparent 0%, transparent 54%, rgba(0,0,0,0.64) 100%)",
         }}
       />
 
       <style jsx>{`
-        /* MOBILE (improved): start lower + center-friendly spacing */
-        .fp-top-left {
+        /* ===== Positions (XS mobile first) ===== */
+        .fp-i1 {
+          top: 18px;
           left: 12px;
-          top: calc(240px + env(safe-area-inset-top));
         }
-        .fp-top-right {
+        .fp-i2 {
+          top: 34px;
           right: 12px;
-          top: calc(262px + env(safe-area-inset-top));
+        }
+        /* keep them above the bottom text block */
+        .fp-i3 {
+          left: 6px;
+          bottom: 220px;
+        }
+        .fp-i4 {
+          right: 8px;
+          bottom: 236px;
+        }
+        /* center hero */
+        .fp-i5 {
+          top: 44%;
+          left: 50%;
         }
 
-        .fp-bottom-left {
-          left: 14px;
-          bottom: 132px;
+        /* RTL mirroring */
+        [data-dir="rtl"] .fp-i1 {
+          left: auto;
+          right: 12px;
         }
-
-        .fp-bottom-right {
-          right: 14px;
-          bottom: 164px;
+        [data-dir="rtl"] .fp-i2 {
+          right: auto;
+          left: 12px;
+        }
+        [data-dir="rtl"] .fp-i3 {
+          left: auto;
+          right: 6px;
+        }
+        [data-dir="rtl"] .fp-i4 {
+          right: auto;
+          left: 8px;
+        }
+        [data-dir="rtl"] .fp-i5 {
+          left: 50%;
+          right: auto;
         }
 
         /* sm */
         @media (min-width: 640px) {
-          .fp-top-left {
-            left: 32px;
-            top: 170px;
+          .fp-i1 {
+            top: 22px;
+            left: 34px;
           }
-          .fp-top-right {
-            right: 40px;
-            top: 184px;
+          .fp-i2 {
+            top: 42px;
+            right: 34px;
           }
-          .fp-bottom-left {
-            left: 40px;
-            bottom: 120px;
+          .fp-i3 {
+            left: 26px;
+            bottom: 190px;
           }
-          .fp-bottom-right {
-            right: 40px;
-            bottom: 144px;
+          .fp-i4 {
+            right: 26px;
+            bottom: 210px;
+          }
+          .fp-i5 {
+            top: 48%;
+          }
+
+          [data-dir="rtl"] .fp-i1 {
+            left: auto;
+            right: 34px;
+          }
+          [data-dir="rtl"] .fp-i2 {
+            right: auto;
+            left: 34px;
+          }
+          [data-dir="rtl"] .fp-i3 {
+            left: auto;
+            right: 26px;
+          }
+          [data-dir="rtl"] .fp-i4 {
+            right: auto;
+            left: 26px;
           }
         }
 
-        /* md */
+        /* md+ */
         @media (min-width: 768px) {
-          .fp-top-left {
-            left: 48px;
+          .fp-i1 {
             top: 72px;
+            left: 52px;
           }
-          .fp-top-right {
-            right: 56px;
+          .fp-i2 {
             top: 76px;
+            right: 58px;
           }
-          .fp-bottom-left {
-            left: 64px;
-            bottom: 96px;
+          .fp-i3 {
+            left: 70px;
+            bottom: 110px;
           }
-          .fp-bottom-right {
-            right: 64px;
-            bottom: 112px;
+          .fp-i4 {
+            right: 74px;
+            bottom: 126px;
           }
-          .fp-center {
-            top: 44%;
+          .fp-i5 {
+            top: 46%;
+          }
+
+          [data-dir="rtl"] .fp-i1 {
+            left: auto;
+            right: 52px;
+          }
+          [data-dir="rtl"] .fp-i2 {
+            right: auto;
+            left: 58px;
+          }
+          [data-dir="rtl"] .fp-i3 {
+            left: auto;
+            right: 70px;
+          }
+          [data-dir="rtl"] .fp-i4 {
+            right: auto;
+            left: 74px;
           }
         }
 
+        /* ===== Premium card effects ===== */
+        .fp-card {
+          border-radius: 9999px;
+          transform: translateZ(0);
+          will-change: transform, filter, opacity;
+        }
+
+        .fp-halo {
+          background: radial-gradient(
+              closest-side,
+              rgba(246, 246, 248, 0.12),
+              rgba(246, 246, 248, 0.06),
+              transparent 72%
+            ),
+            radial-gradient(closest-side, rgba(227, 27, 35, 0.12), transparent 70%);
+        }
+
+        .fp-shine {
+          background: radial-gradient(
+              140px 90px at 30% 22%,
+              rgba(255, 255, 255, 0.22),
+              transparent 60%
+            ),
+            radial-gradient(120px 80px at 68% 78%, rgba(255, 255, 255, 0.10), transparent 60%);
+          opacity: 0.85;
+          mix-blend-mode: screen;
+          animation: shineSweep 5.8s ease-in-out infinite;
+        }
+
+        @keyframes shineSweep {
+          0% {
+            transform: translateX(-10px) translateY(6px);
+            opacity: 0.72;
+          }
+          50% {
+            transform: translateX(10px) translateY(-6px);
+            opacity: 0.95;
+          }
+          100% {
+            transform: translateX(-10px) translateY(6px);
+            opacity: 0.72;
+          }
+        }
+
+        /* ===== Orbit rings (center hero) ===== */
+        .fp-orbit {
+          border-radius: 9999px;
+          opacity: 0.95;
+          z-index: 0;
+        }
+
+        .fp-ring {
+          position: absolute;
+          inset: 0;
+          border-radius: 9999px;
+          background: conic-gradient(
+            from 180deg,
+            rgba(227, 27, 35, 0),
+            rgba(227, 27, 35, 0.22),
+            rgba(246, 246, 248, 0.16),
+            rgba(227, 27, 35, 0)
+          );
+          -webkit-mask: radial-gradient(transparent 62%, #000 64%);
+          mask: radial-gradient(transparent 62%, #000 64%);
+          filter: blur(0.2px);
+        }
+
+        .fp-ring1 {
+          animation: orbitSpin 14s linear infinite;
+          opacity: 0.7;
+        }
+        .fp-ring2 {
+          inset: 10px;
+          animation: orbitSpin 19s linear infinite reverse;
+          opacity: 0.55;
+        }
+
+        @keyframes orbitSpin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        /* ===== Mesh background ===== */
+        .fp-mesh {
+          opacity: 0.22;
+          background: radial-gradient(520px 320px at 18% 16%, rgba(227, 27, 35, 0.22), transparent 60%),
+            radial-gradient(560px 360px at 82% 40%, rgba(179, 15, 22, 0.18), transparent 60%),
+            radial-gradient(520px 360px at 48% 72%, rgba(255, 255, 255, 0.10), transparent 62%);
+          animation: meshMove 9.5s ease-in-out infinite;
+          will-change: transform, opacity;
+        }
+
+        @keyframes meshMove {
+          0% {
+            transform: translate3d(0, 0, 0) scale(1);
+          }
+          50% {
+            transform: translate3d(10px, -10px, 0) scale(1.02);
+          }
+          100% {
+            transform: translate3d(0, 0, 0) scale(1);
+          }
+        }
+
+        /* ===== Badge ===== */
+        .fp-badge {
+          background: rgba(11, 15, 20, 0.56);
+          border: 1px solid rgba(246, 246, 248, 0.18);
+          color: rgba(246, 246, 248, 0.86);
+          backdrop-filter: blur(10px);
+          box-shadow: 0 14px 34px rgba(0, 0, 0, 0.34);
+        }
+
+        /* ===== Float animations (richer) ===== */
         .float-a {
-          animation: floatY 8.2s ease-in-out infinite,
-            driftX 13s ease-in-out infinite;
+          animation: floatY 8.4s ease-in-out infinite, driftX 13.8s ease-in-out infinite, pulse 6.2s ease-in-out infinite;
         }
         .float-b {
-          animation: floatY 10.4s ease-in-out infinite,
-            driftX 16s ease-in-out infinite;
+          animation: floatY 10.2s ease-in-out infinite, driftX 16.2s ease-in-out infinite, pulse 7.1s ease-in-out infinite;
           animation-delay: -1.1s;
         }
         .float-c {
-          animation: floatY 9.2s ease-in-out infinite,
-            driftX 18s ease-in-out infinite;
+          animation: floatY 9.4s ease-in-out infinite, driftX 18.4s ease-in-out infinite, pulse 6.8s ease-in-out infinite;
           animation-delay: -2s;
         }
         .float-d {
-          animation: floatY 11.2s ease-in-out infinite,
-            driftX 20s ease-in-out infinite;
+          animation: floatY 11.1s ease-in-out infinite, driftX 20.2s ease-in-out infinite, pulse 7.4s ease-in-out infinite;
           animation-delay: -0.9s;
         }
         .float-e {
-          animation: floatY 12.4s ease-in-out infinite,
-            driftX 22s ease-in-out infinite;
+          animation: floatY 12.2s ease-in-out infinite, driftX 22.4s ease-in-out infinite, pulse 7.8s ease-in-out infinite;
           animation-delay: -1.6s;
         }
 
         @keyframes floatY {
           0% {
-            transform: translateY(0px) rotate(-0.8deg);
+            transform: translateY(0px) rotate(-1.1deg);
           }
           50% {
-            transform: translateY(-18px) rotate(0.8deg);
+            transform: translateY(-20px) rotate(1.1deg);
           }
           100% {
-            transform: translateY(0px) rotate(-0.8deg);
+            transform: translateY(0px) rotate(-1.1deg);
           }
         }
         @keyframes driftX {
@@ -311,10 +503,93 @@ function FloatingProducts({
             margin-left: 0px;
           }
           50% {
-            margin-left: 14px;
+            margin-left: 16px;
           }
           100% {
             margin-left: 0px;
+          }
+        }
+        @keyframes pulse {
+          0% {
+            filter: saturate(1) brightness(1);
+          }
+          50% {
+            filter: saturate(1.06) brightness(1.03);
+          }
+          100% {
+            filter: saturate(1) brightness(1);
+          }
+        }
+
+        /* ===== Sparkles ===== */
+        .fp-spark {
+          position: absolute;
+          width: 6px;
+          height: 6px;
+          border-radius: 9999px;
+          background: rgba(246, 246, 248, 0.75);
+          box-shadow: 0 0 18px rgba(246, 246, 248, 0.55);
+          opacity: 0;
+          animation: twinkle 3.6s ease-in-out infinite;
+        }
+        .fp-s1 {
+          left: 18%;
+          top: 22%;
+          animation-delay: -0.2s;
+        }
+        .fp-s2 {
+          left: 78%;
+          top: 18%;
+          animation-delay: -1.4s;
+        }
+        .fp-s3 {
+          left: 14%;
+          top: 62%;
+          animation-delay: -2.1s;
+        }
+        .fp-s4 {
+          left: 86%;
+          top: 58%;
+          animation-delay: -0.9s;
+        }
+        .fp-s5 {
+          left: 52%;
+          top: 28%;
+          animation-delay: -2.8s;
+        }
+
+        @keyframes twinkle {
+          0% {
+            transform: scale(0.6);
+            opacity: 0;
+          }
+          40% {
+            transform: scale(1);
+            opacity: 0.75;
+          }
+          70% {
+            transform: scale(0.85);
+            opacity: 0.25;
+          }
+          100% {
+            transform: scale(0.6);
+            opacity: 0;
+          }
+        }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+          .fp-mesh,
+          .fp-shine,
+          .fp-ring1,
+          .fp-ring2,
+          .float-a,
+          .float-b,
+          .float-c,
+          .float-d,
+          .float-e,
+          .fp-spark {
+            animation: none !important;
           }
         }
       `}</style>
@@ -328,6 +603,51 @@ export function QrSection({ config, lang }: QrSectionProps) {
 
   const [parallaxY, setParallaxY] = useState(0);
   const [layerOpacity, setLayerOpacity] = useState(1);
+
+  const [drift, setDrift] = useState({ x: 0, y: 0 });
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    const sync = () => setReduceMotion(!!mq?.matches);
+    sync();
+    mq?.addEventListener?.("change", sync);
+    return () => mq?.removeEventListener?.("change", sync);
+  }, []);
+
+  useEffect(() => {
+    if (reduceMotion) return;
+
+    let raf = 0;
+    const update = (clientX: number, clientY: number) => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const vw = window.innerWidth || 1;
+        const vh = window.innerHeight || 1;
+
+        const nx = clamp((clientX - vw / 2) / (vw / 2), -1, 1);
+        const ny = clamp((clientY - vh / 2) / (vh / 2), -1, 1);
+
+        const amp = vw >= 768 ? 18 : 12;
+        setDrift({ x: nx * amp, y: ny * amp });
+      });
+    };
+
+    const onPointer = (e: PointerEvent) => update(e.clientX, e.clientY);
+    const onTouch = (e: TouchEvent) => {
+      if (!e.touches?.[0]) return;
+      update(e.touches[0].clientX, e.touches[0].clientY);
+    };
+
+    window.addEventListener("pointermove", onPointer, { passive: true });
+    window.addEventListener("touchmove", onTouch, { passive: true });
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("pointermove", onPointer);
+      window.removeEventListener("touchmove", onTouch);
+    };
+  }, [reduceMotion]);
 
   useEffect(() => {
     let raf = 0;
@@ -366,6 +686,9 @@ export function QrSection({ config, lang }: QrSectionProps) {
     };
   }, []);
 
+  const driftX = reduceMotion ? 0 : drift.x;
+  const driftY = reduceMotion ? 0 : drift.y;
+
   return (
     <section
       ref={(node) => {
@@ -377,10 +700,9 @@ export function QrSection({ config, lang }: QrSectionProps) {
       <div className="relative w-full pt-[76px] md:pt-0">
         {/* MOBILE */}
         <div className="relative md:hidden h-[calc(100svh-76px)] min-h-[580px] w-full">
-          {/* ✅ Background => bg2 */}
           <div className="absolute inset-0">
             <Image
-              src="/bg2.svg"
+              src="/bgs2.svg"
               alt="Background"
               fill
               priority
@@ -388,24 +710,23 @@ export function QrSection({ config, lang }: QrSectionProps) {
             />
           </div>
 
-          {/* ✅ Overlay */}
           <div
             className="pointer-events-none absolute inset-0"
             style={{
               background:
-                "linear-gradient(to bottom, rgba(11,15,20,0.08), rgba(11,15,20,0.52), rgba(11,15,20,0.90)), radial-gradient(900px 520px at 18% 18%, rgba(227,27,35,0.16), transparent 60%)",
+                "linear-gradient(to bottom, rgba(11,15,20,0.10), rgba(11,15,20,0.52), rgba(11,15,20,0.90)), radial-gradient(900px 520px at 18% 18%, rgba(227,27,35,0.16), transparent 60%)",
             }}
           />
 
-          {/* Floating shoes */}
           <FloatingProducts
             lang={lang}
             isAr={isAr}
             parallaxY={parallaxY}
             opacity={layerOpacity}
+            driftX={driftX}
+            driftY={driftY}
           />
 
-          {/* CLEAN text (small) */}
           <div className="absolute inset-x-0 bottom-0 px-4 pb-[max(16px,env(safe-area-inset-bottom))]">
             <div className={"mx-auto max-w-[520px] " + (isAr ? "text-right" : "text-left")}>
               <p className="text-[10px] font-extrabold uppercase tracking-[0.28em] text-white/55">
@@ -427,7 +748,7 @@ export function QrSection({ config, lang }: QrSectionProps) {
         {/* DESKTOP */}
         <div className="relative hidden md:block h-[70vh] lg:h-[88vh] min-h-[680px] w-full">
           <div className="absolute inset-0">
-            <Image src="/bg2.svg" alt="Background" fill priority className="object-cover" />
+            <Image src="/bgs2.svg" alt="Background" fill priority className="object-cover" />
           </div>
 
           <div
@@ -443,6 +764,8 @@ export function QrSection({ config, lang }: QrSectionProps) {
             isAr={isAr}
             parallaxY={parallaxY}
             opacity={layerOpacity}
+            driftX={driftX}
+            driftY={driftY}
           />
 
           <div className={"absolute left-7 top-7 " + (isAr ? "text-right" : "text-left")}>
